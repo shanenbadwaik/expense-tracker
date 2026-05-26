@@ -2,7 +2,7 @@ from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
 
-SECRET_KEY = "SECRET123"
+SECRET_KEY = "mysecretkey"
 ALGORITHM = "HS256"
 
 pwd_context = CryptContext(
@@ -10,29 +10,19 @@ pwd_context = CryptContext(
     deprecated="auto"
 )
 
-
 def hash_password(password: str):
-
-    # bcrypt max length fix
-    password = password[:72]
-
-    return pwd_context.hash(password)
-
+    return pwd_context.hash(password[:72])
 
 def verify_password(
     plain_password,
     hashed_password
 ):
-
-    plain_password = plain_password[:72]
-
     return pwd_context.verify(
-        plain_password,
+        plain_password[:72],
         hashed_password
     )
 
-
-def create_token(data: dict):
+def create_access_token(data: dict):
 
     to_encode = data.copy()
 
@@ -42,8 +32,10 @@ def create_token(data: dict):
         "exp": expire
     })
 
-    return jwt.encode(
+    encoded_jwt = jwt.encode(
         to_encode,
         SECRET_KEY,
         algorithm=ALGORITHM
     )
+
+    return encoded_jwt

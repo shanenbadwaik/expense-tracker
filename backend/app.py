@@ -1,40 +1,28 @@
-from fastapi import (
-    FastAPI,
-    Depends,
-    HTTPException
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import (
+    OAuth2PasswordBearer,
+    OAuth2PasswordRequestForm
 )
 
-from fastapi.middleware.cors import CORSMiddleware
-
 from sqlalchemy.orm import Session
+
+from jose import JWTError, jwt
+
+from datetime import datetime, timedelta
 
 import models
 import schemas
 import auth
 
-from database import (
-    SessionLocal,
-    engine
-)
+from database import SessionLocal, engine
 
-# -----------------------------
 # CREATE DATABASE TABLES
-# -----------------------------
-
-models.Base.metadata.create_all(
-    bind=engine
-)
-
-# -----------------------------
-# FASTAPI APP
-# -----------------------------
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# -----------------------------
 # CORS
-# -----------------------------
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,10 +31,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# -----------------------------
-# DATABASE DEPENDENCY
-# -----------------------------
+# JWT CONFIG
+SECRET_KEY = "mysecretkey"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="login"
+)
+
+# DATABASE CONNECTION
 def get_db():
 
     db = SessionLocal()
@@ -57,50 +51,104 @@ def get_db():
     finally:
         db.close()
 
-# -----------------------------
-# REGISTER API
-# -----------------------------
 
-@app.post("/register")
-def register(
-    user: schemas.UserCreate,
+# CREATE ACCESS TOKEN
+def create_access_token(data: dict):
+
+    to_encode = data.copy()
+
+    expire = datetime.utcnow() + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    to_encode.update({
+        "exp": expire
+    })
+
+    encoded_jwt = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+    return encoded_jwt
+
+
+# GET CURRENT USER
+def get_current_user(
+
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
+
 ):
 
-    # check email already exists
-    existing_email = db.query(
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials"
+    )
+
+    try:
+
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        email = payload.get("sub")
+
+        if email is None:
+            raise credentials_exception
+
+    except JWTError:
+        raise credentials_exception
+
+    user = db.query(models.User).filter(
+        models.User.email == email
+    ).first()
+
+    if user is None:
+        raise credentials_exception
+
+    return user
+
+
+# HOME ROUTE
+@app.get("/")
+def home():
+
+    return {
+        "message":
+        "Expense Tracker Backend Running"
+    }
+
+
+# REGISTER USER
+@app.post("/register")
+def register(
+
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db)
+
+):
+
+    existing_user = db.query(
         models.User
     ).filter(
         models.User.email == user.email
     ).first()
 
-    if existing_email:
+    if existing_user:
 
         raise HTTPException(
             status_code=400,
-            detail="Email already exists"
+            detail="Email already registered"
         )
 
-    # check username already exists
-    existing_username = db.query(
-        models.User
-    ).filter(
-        models.User.username == user.username
-    ).first()
-
-    if existing_username:
-
-        raise HTTPException(
-            status_code=400,
-            detail="Username already exists"
-        )
-
-    # hash password
     hashed_password = auth.hash_password(
         user.password
     )
 
-    # create user
     new_user = models.User(
         username=user.username,
         email=user.email,
@@ -108,137 +156,121 @@ def register(
     )
 
     db.add(new_user)
+
     db.commit()
+
     db.refresh(new_user)
 
-    # create token
-    token = auth.create_token({
-        "user_id": new_user.id
-    })
-
     return {
-        "message": "User registered successfully",
-        "access_token": token
+        "message":
+        "User registered successfully"
     }
 
-# -----------------------------
-# LOGIN API
-# -----------------------------
 
+# LOGIN USER
 @app.post("/login")
 def login(
-    user: schemas.UserLogin,
+
+    request: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
+
 ):
 
-    db_user = db.query(
-        models.User
-    ).filter(
-        models.User.username == user.username
-    ).first()
-
-    if not db_user:
-
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid username"
-        )
-
-    # verify password
-    valid_password = auth.verify_password(
-        user.password,
-        db_user.password
-    )
-
-    if not valid_password:
-
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid password"
-        )
-
-    # create token
-    token = auth.create_token({
-        "user_id": db_user.id
-    })
-
-    return {
-        "access_token": token,
-        "message": "Login successful"
-    }
-
-# -----------------------------
-# RESET PASSWORD API
-# -----------------------------
-
-@app.put("/reset-password")
-def reset_password(
-    data: schemas.ResetPassword,
-    db: Session = Depends(get_db)
-):
-
-    user = db.query(
-        models.User
-    ).filter(
-        models.User.username == data.username
+    user = db.query(models.User).filter(
+        models.User.email == request.username
     ).first()
 
     if not user:
 
         raise HTTPException(
-            status_code=404,
-            detail="User not found"
+            status_code=401,
+            detail="Invalid Email or Password"
         )
 
-    user.password = auth.hash_password(
-        data.new_password
+    if not auth.verify_password(
+        request.password,
+        user.password
+    ):
+
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Email or Password"
+        )
+
+    access_token = create_access_token(
+        data={
+            "sub": user.email
+        }
     )
 
-    db.commit()
-
     return {
-        "message": "Password reset successful"
+        "access_token": access_token,
+        "token_type": "bearer"
     }
 
-# -----------------------------
-# CREATE EXPENSE
-# -----------------------------
 
+# ADD EXPENSE
 @app.post("/expenses")
-def create_expense(
+def add_expense(
+
     expense: schemas.ExpenseCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(
+        get_current_user
+    )
+
 ):
 
     new_expense = models.Expense(
         amount=expense.amount,
         category=expense.category,
-        date=expense.date,
         description=expense.description,
-        user_id=1
+        date=expense.date,
+        user_id=current_user.id
     )
 
     db.add(new_expense)
 
     db.commit()
 
-    db.refresh(new_expense)
-
     return {
-        "message": "Expense added successfully"
+        "message":
+        "Expense added successfully"
     }
 
-# -----------------------------
-# GET ALL EXPENSES
-# -----------------------------
 
+# GET USER EXPENSES
 @app.get("/expenses")
 def get_expenses(
-    db: Session = Depends(get_db)
+
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(
+        get_current_user
+    )
+
 ):
 
     expenses = db.query(
         models.Expense
+    ).filter(
+        models.Expense.user_id ==
+        current_user.id
     ).all()
 
     return expenses
+
+
+# GET USER PROFILE
+@app.get("/profile")
+def get_profile(
+
+    current_user: models.User = Depends(
+        get_current_user
+    )
+
+):
+
+    return {
+        "username": current_user.username,
+        "email": current_user.email
+    }
