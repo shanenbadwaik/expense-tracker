@@ -1,38 +1,34 @@
-.App {
-  text-align: center;
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: #070D0B;
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: #8FCBA8; color: #0B1310; }
+
+@keyframes cairnToast {
+  from { transform: translateX(-50%) translateY(-12px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+@keyframes cairnSheet {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+input::placeholder { color: #6B7D73; }
+input { box-sizing: border-box; }
+
+/* Override browser autofill so it matches the dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #131e1a inset !important;
+  -webkit-text-fill-color: #ECF1ED !important;
+  caret-color: #ECF1ED;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+::-webkit-scrollbar { width: 0; }

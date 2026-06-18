@@ -55,15 +55,16 @@ class Expense(Base):
 
     amount = Column(Float)
 
-    category = Column(String)
+    category = Column(String, index=True)
 
-    date = Column(Date)
+    date = Column(Date, index=True)
 
     description = Column(String)
 
     user_id = Column(
         Integer,
-        ForeignKey("users.id")
+        ForeignKey("users.id"),
+        index=True,
     )
 
     owner = relationship(

@@ -1,329 +1,225 @@
 import { useState } from "react";
 import axios from "axios";
 
-function Login() {
+const ACCENT = "#8FCBA8";
 
-  const [isRegister, setIsRegister] =
-    useState(false);
+const inputStyle = {
+  height: 52,
+  borderRadius: 14,
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(255,255,255,0.05)",
+  color: "#ECF1ED",
+  fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
+  fontSize: 15,
+  paddingLeft: 16,
+  paddingRight: 16,
+  outline: "none",
+  width: "100%",
+  boxSizing: "border-box",
+  display: "block",
+};
 
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
+export default function Login() {
+  const [mode, setMode]         = useState("login");
+  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [toast, setToast]       = useState(null);
+  const [loading, setLoading]   = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-
+  const showToast = (msg, kind = "error") => {
+    setToast({ msg, kind });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
-
+    setLoading(true);
     try {
-
-      // REGISTER
-      if (isRegister) {
-
-        await axios.post(
-          "http://127.0.0.1:8000/register",
-          {
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-          }
-        );
-
-        alert(
-          "Registration Successful. Please Login."
-        );
-
-        setIsRegister(false);
-
-        setFormData({
-          username: "",
-          email: "",
-          password: "",
+      if (mode === "register") {
+        await axios.post("http://127.0.0.1:8000/register", {
+          username: formData.username,
+          email:    formData.email,
+          password: formData.password,
         });
-
-      }
-
-      // LOGIN
-      else {
-
-        const loginData = new URLSearchParams();
-
-        loginData.append(
-          "username",
-          formData.email
-        );
-
-        loginData.append(
-          "password",
-          formData.password
-        );
-
-        const response = await axios.post(
-          "http://127.0.0.1:8000/login",
-          loginData,
-          {
-            headers: {
-              "Content-Type":
-                "application/x-www-form-urlencoded",
-            },
-          }
-        );
-
-        localStorage.setItem(
-          "token",
-          response.data.access_token
-        );
-
-        alert("Login Successful");
-
+        showToast("Account created — please log in.", "success");
+        setMode("login");
+        setFormData({ username: "", email: "", password: "" });
+      } else {
+        const body = new URLSearchParams();
+        body.append("username", formData.email);
+        body.append("password", formData.password);
+        const res = await axios.post("http://127.0.0.1:8000/login", body, {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
+        localStorage.setItem("token", res.data.access_token);
         window.location.href = "/dashboard";
-
       }
-
-    } catch (error) {
-
-      console.log(error);
-
-      alert(
-        error.response?.data?.detail ||
-        "Something went wrong"
-      );
-
+    } catch (err) {
+      showToast(err.response?.data?.detail || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
-
   };
 
+  const isRegister = mode === "register";
+
   return (
+    <div style={{
+      minHeight: "100vh",
+      background: "radial-gradient(120% 70% at 18% -5%, rgba(21,48,39,0) 0%, #070D0B 60%), radial-gradient(90% 60% at 92% 8%, #11231D 0%, #070D0B 55%), #070D0B",
+      fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
+      display: "grid",
+      placeItems: "center",
+      padding: "40px 20px",
+      boxSizing: "border-box",
+    }}>
 
-    <div style={styles.container}>
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
+          zIndex: 100, display: "flex", alignItems: "center", gap: 10,
+          padding: "13px 16px", borderRadius: 16, whiteSpace: "nowrap",
+          background: toast.kind === "error" ? "rgba(232,137,124,0.16)" : "rgba(143,203,168,0.16)",
+          border: `1px solid ${toast.kind === "error" ? "rgba(232,137,124,0.4)" : "rgba(143,203,168,0.4)"}`,
+          boxShadow: "0 16px 30px -12px rgba(0,0,0,0.5)",
+          animation: "cairnToast .28s ease",
+        }}>
+          <span style={{
+            width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+            background: toast.kind === "error" ? "#E8897C" : "#8FCBA8",
+            color: "#0B1310", display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 13, fontWeight: 700,
+          }}>{toast.kind === "error" ? "!" : "✓"}</span>
+          <span style={{ fontSize: 13, color: "#ECF1ED" }}>{toast.msg}</span>
+        </div>
+      )}
 
-      {/* LEFT SECTION */}
-      <div style={styles.left}>
+      {/* Card container */}
+      <div style={{ width: "100%", maxWidth: 460 }}>
 
-        <h1 style={styles.logo}>
-          ExpenseTracker
-        </h1>
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 32 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ width: 22, height: 4, borderRadius: 99, background: ACCENT }} />
+            <div style={{ width: 15, height: 4, borderRadius: 99, background: ACCENT, opacity: .7, margin: "0 auto" }} />
+            <div style={{ width: 9,  height: 4, borderRadius: 99, background: ACCENT, opacity: .45, margin: "0 auto" }} />
+          </div>
+          <span style={{ fontSize: 18, fontWeight: 700, color: "#ECF1ED" }}>Cairn</span>
+        </div>
 
-        <h2 style={styles.heading}>
-          Manage Your Expenses Smartly
-        </h2>
+        {/* Card */}
+        <div style={{
+          borderRadius: 28,
+          overflow: "hidden",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.10)",
+          boxShadow: "0 32px 64px -24px rgba(0,0,0,0.6)",
+        }}>
 
-        <p style={styles.text}>
-          Track your spending, monitor your
-          savings, and stay financially strong
-          with a modern expense tracking
-          experience.
-        </p>
+          {/* Card header */}
+          <div style={{
+            paddingTop: 36, paddingRight: 36, paddingBottom: 32, paddingLeft: 36,
+            background: "linear-gradient(165deg,#1f4438,rgba(22,48,39,0)), radial-gradient(120% 90% at 30% 10%, #2a5446, #0e1a15)",
+            position: "relative",
+            overflow: "hidden",
+          }}>
+            <div style={{
+              position: "absolute", top: -40, right: -30,
+              width: 200, height: 200, borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(227,189,158,0.35), transparent 65%)",
+              filter: "blur(10px)", pointerEvents: "none",
+            }} />
+            <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 40, lineHeight: 1.1, color: "#fff", position: "relative" }}>
+              {isRegister ? "Create your account." : "Welcome back."}
+            </div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginTop: 10, position: "relative" }}>
+              {isRegister ? "Start building a calmer money habit." : "Log in to continue."}
+            </div>
+          </div>
 
-      </div>
-
-      {/* RIGHT SECTION */}
-      <div style={styles.right}>
-
-        <div style={styles.card}>
-
-          <h1 style={styles.title}>
-            {isRegister
-              ? "Create Account"
-              : "Welcome Back"}
-          </h1>
-
-          <p style={styles.subTitle}>
-            {isRegister
-              ? "Register to continue"
-              : "Login to continue"}
-          </p>
-
-          <form onSubmit={handleSubmit}>
-
+          {/* Form */}
+          <form onSubmit={handleSubmit} style={{
+            paddingTop: 32,
+            paddingRight: 36,
+            paddingBottom: 36,
+            paddingLeft: 36,
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+          }}>
             {isRegister && (
-
-              <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                value={formData.username}
-                onChange={handleChange}
-                style={styles.input}
-                required
-              />
-
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#9DB0A5", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Username
+                </div>
+                <input
+                  type="text" name="username"
+                  value={formData.username} onChange={handleChange}
+                  required style={inputStyle}
+                />
+              </div>
             )}
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#9DB0A5", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>
+                Email
+              </div>
+              <input
+                type="email" name="email"
+                value={formData.email} onChange={handleChange}
+                required style={inputStyle}
+              />
+            </div>
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#9DB0A5", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>
+                Password
+              </div>
+              <input
+                type="password" name="password"
+                value={formData.password} onChange={handleChange}
+                required style={inputStyle}
+              />
+              {isRegister && (
+                <div style={{ fontSize: 11, color: "#6B7D73", marginTop: 6 }}>At least 8 characters.</div>
+              )}
+            </div>
 
             <button
               type="submit"
-              style={styles.button}
+              disabled={loading}
+              style={{
+                height: 56, width: "100%",
+                border: "none", borderRadius: 99,
+                background: ACCENT, color: "#0B1310",
+                fontFamily: "inherit", fontSize: 16, fontWeight: 700,
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                marginTop: 4,
+                display: "block",
+              }}
             >
-              {isRegister
-                ? "Register"
-                : "Login"}
+              {loading ? "…" : isRegister ? "Create account" : "Log in"}
             </button>
 
+            <div style={{ textAlign: "center", fontSize: 13, color: "#9DB0A5" }}>
+              {isRegister ? "Already have an account?" : "New here?"}{" "}
+              <span
+                onClick={() => {
+                  setMode(isRegister ? "login" : "register");
+                  setFormData({ username: "", email: "", password: "" });
+                }}
+                style={{ color: ACCENT, fontWeight: 600, cursor: "pointer" }}
+              >
+                {isRegister ? "Log in" : "Create account"}
+              </span>
+            </div>
           </form>
-
-          <p style={styles.switchText}>
-
-            {isRegister
-              ? "Already have an account?"
-              : "Don't have an account?"}
-
-            <span
-              onClick={() =>
-                setIsRegister(!isRegister)
-              }
-              style={styles.switchBtn}
-            >
-              {isRegister
-                ? " Login"
-                : " Register"}
-            </span>
-
-          </p>
-
         </div>
-
       </div>
-
     </div>
-
   );
-
 }
-
-const styles = {
-
-  container: {
-    display: "flex",
-    minHeight: "100vh",
-    background:
-      "linear-gradient(to right, #020024, #090979, #000000)",
-    color: "white",
-    fontFamily: "Arial",
-  },
-
-  left: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    padding: "80px",
-  },
-
-  logo: {
-    color: "#8b5cf6",
-    fontSize: "45px",
-    marginBottom: "20px",
-  },
-
-  heading: {
-    fontSize: "55px",
-    lineHeight: "70px",
-    marginBottom: "20px",
-  },
-
-  text: {
-    color: "#d1d5db",
-    fontSize: "20px",
-    width: "80%",
-    lineHeight: "35px",
-  },
-
-  right: {
-    flex: 1,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  card: {
-    width: "420px",
-    padding: "40px",
-    borderRadius: "25px",
-    background: "rgba(255,255,255,0.08)",
-    backdropFilter: "blur(10px)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    boxShadow:
-      "0px 0px 30px rgba(0,0,0,0.4)",
-  },
-
-  title: {
-    fontSize: "35px",
-    marginBottom: "10px",
-  },
-
-  subTitle: {
-    color: "#d1d5db",
-    marginBottom: "30px",
-  },
-
-  input: {
-    width: "95%",
-    padding: "10px",
-    marginBottom: "20px",
-    borderRadius: "12px",
-    border: "1px solid rgba(255,255,255,0.2)",
-    background: "rgba(255,255,255,0.08)",
-    color: "white",
-    outline: "none",
-    fontSize: "16px",
-  },
-
-  button: {
-    width: "100%",
-    padding: "15px",
-    borderRadius: "12px",
-    border: "none",
-    background:
-      "linear-gradient(to right, #7c3aed, #4f46e5)",
-    color: "white",
-    fontSize: "18px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    marginTop: "10px",
-  },
-
-  switchText: {
-    marginTop: "25px",
-    textAlign: "center",
-    color: "#d1d5db",
-  },
-
-  switchBtn: {
-    color: "#8b5cf6",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-
-};
-
-export default Login;
