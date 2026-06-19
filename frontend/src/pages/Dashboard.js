@@ -129,6 +129,8 @@ export default function Dashboard() {
   const [tab, setTab]           = useState("home");
   const [expenses, setExpenses] = useState([]);
   const [profile, setProfile]   = useState({});
+  const [verifyBanner, setVerifyBanner] = useState(false);
+  const [resendsLoading, setResendsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount]     = useState("");
   const [category, setCategory] = useState("Food");
@@ -163,7 +165,20 @@ export default function Dashboard() {
     try {
       const res = await axios.get("http://127.0.0.1:8000/profile", headers);
       setProfile(res.data);
+      if (!res.data.is_verified) setVerifyBanner(true);
     } catch (e) { console.log(e); }
+  };
+
+  const resendVerification = async () => {
+    setResendsLoading(true);
+    try {
+      await axios.post("http://127.0.0.1:8000/resend-verification", {}, headers);
+      showToast("Verification email sent — check your inbox.", "success");
+    } catch (e) {
+      showToast("Couldn't send email. Try again shortly.", "error");
+    } finally {
+      setResendsLoading(false);
+    }
   };
 
   useEffect(() => { fetchExpenses(); fetchProfile(); }, []);
@@ -512,6 +527,37 @@ export default function Dashboard() {
     </div>
   ) : null;
 
+  const verifyBannerJsx = verifyBanner ? (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 12,
+      padding: "11px 16px",
+      background: "rgba(227,189,158,0.10)",
+      borderBottom: "1px solid rgba(227,189,158,0.20)",
+      flexWrap: "wrap",
+    }}>
+      <span style={{ fontSize: 13, color: "#E3BD9E", flex: 1, minWidth: 200 }}>
+        ✉ Please verify your email address to secure your account.
+      </span>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <span
+          onClick={resendsLoading ? undefined : resendVerification}
+          style={{
+            fontSize: 12, fontWeight: 600, color: "#E3BD9E",
+            cursor: resendsLoading ? "default" : "pointer",
+            opacity: resendsLoading ? 0.5 : 1,
+            textDecoration: "underline",
+          }}
+        >
+          {resendsLoading ? "Sending…" : "Resend email"}
+        </span>
+        <span
+          onClick={() => setVerifyBanner(false)}
+          style={{ fontSize: 18, color: "rgba(255,255,255,0.3)", cursor: "pointer", lineHeight: 1 }}
+        >×</span>
+      </div>
+    </div>
+  ) : null;
+
   // ════════════════════════════════════════════════════════════════
   // DESKTOP LAYOUT
   // ════════════════════════════════════════════════════════════════
@@ -566,7 +612,9 @@ export default function Dashboard() {
         </div>
 
         {/* MAIN AREA */}
-        <div style={{ flex: 1, padding: 30, minWidth: 0, overflowY: "auto" }}>
+        <div style={{ flex: 1, minWidth: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          {verifyBannerJsx}
+          <div style={{ flex: 1, padding: 30 }}>
 
           {/* Header row */}
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 16 }}>
@@ -689,7 +737,8 @@ export default function Dashboard() {
           {tab === "activity" && <div style={{ maxWidth: 700, margin: "0 auto" }}><ActivityContent /></div>}
           {tab === "insights" && <div style={{ maxWidth: 600, margin: "0 auto" }}><InsightsContent /></div>}
           {tab === "profile" && <div style={{ maxWidth: 500, margin: "0 auto" }}><ProfileContent /></div>}
-        </div>
+          </div>{/* end inner padding div */}
+        </div>{/* end flex column main area */}
 
         {modalJsx}
       </div>
@@ -702,6 +751,7 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: "100vh", background: T.rootBg, color: T.text, fontFamily: "'Hanken Grotesk', system-ui, sans-serif", display: "flex", flexDirection: "column", position: "relative" }}>
       {toastJsx}
+      {verifyBannerJsx}
 
       {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: "auto", paddingBottom: 100 }}>

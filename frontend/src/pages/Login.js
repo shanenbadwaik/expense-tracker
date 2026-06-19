@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const ACCENT = "#8FCBA8";
@@ -24,6 +25,7 @@ export default function Login() {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [toast, setToast]       = useState(null);
   const [loading, setLoading]   = useState(false);
+  const navigate                = useNavigate();
 
   const handleChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -184,7 +186,17 @@ export default function Login() {
                 required style={inputStyle}
               />
               {isRegister && (
-                <div style={{ fontSize: 11, color: "#6B7D73", marginTop: 6 }}>At least 8 characters.</div>
+                <div style={{ fontSize: 11, color: "#6B7D73", marginTop: 6 }}>At least 8 characters, one uppercase letter and one number.</div>
+              )}
+              {!isRegister && (
+                <div style={{ textAlign: "right", marginTop: 6 }}>
+                  <span
+                    onClick={() => navigate("/forgot-password")}
+                    style={{ fontSize: 12, color: ACCENT, fontWeight: 500, cursor: "pointer" }}
+                  >
+                    Forgot password?
+                  </span>
+                </div>
               )}
             </div>
 

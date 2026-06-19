@@ -28,3 +28,5 @@ pydantic-settings==2.14.1
 pydantic_core==2.41.5
 python-dotenv==1.2.2
 slowapi==0.1.10
+aiosmtplib==5.1.1
+fastapi-mail==1.6.5

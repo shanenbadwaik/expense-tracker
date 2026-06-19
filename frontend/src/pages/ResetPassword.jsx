@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const ACCENT = "#8FCBA8";
@@ -16,22 +16,43 @@ const inputStyle = {
   boxSizing: "border-box", display: "block",
 };
 
-export default function ForgotPassword() {
-  const [email, setEmail]     = useState("");
-  const [step, setStep]       = useState("form"); // "form" | "sent"
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState("");
-  const navigate              = useNavigate();
+export default function ResetPassword() {
+  const [params]          = useSearchParams();
+  const navigate          = useNavigate();
+  const token             = params.get("token") || "";
+
+  const [password, setPassword]   = useState("");
+  const [confirm, setConfirm]     = useState("");
+  const [step, setStep]           = useState("form"); // "form" | "success"
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
+
+  useEffect(() => {
+    if (!token) setError("No reset token found. Please request a new link.");
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirm) {
+      setError("Passwords don't match.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios.post("http://127.0.0.1:8000/forgot-password", { email });
-      setStep("sent");
+      await axios.post("http://127.0.0.1:8000/reset-password", {
+        token,
+        new_password: password,
+      });
+      setStep("success");
     } catch (err) {
-      setError(err.response?.data?.detail || "Something went wrong. Please try again.");
+      setError(err.response?.data?.detail || "Reset failed. The link may have expired.");
     } finally {
       setLoading(false);
     }
@@ -72,81 +93,83 @@ export default function ForgotPassword() {
             position: "relative", overflow: "hidden",
           }}>
             <div style={{
-              position: "absolute", top: -40, right: -30,
-              width: 200, height: 200, borderRadius: "50%",
+              position: "absolute", top: -40, right: -30, width: 200, height: 200, borderRadius: "50%",
               background: "radial-gradient(circle, rgba(227,189,158,0.35), transparent 65%)",
               filter: "blur(10px)", pointerEvents: "none",
             }} />
             <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 40, lineHeight: 1.1, color: "#fff", position: "relative" }}>
-              {step === "sent" ? "Check your inbox." : "Forgot your password?"}
+              {step === "success" ? "All done." : "Choose a new password."}
             </div>
             <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginTop: 10, position: "relative" }}>
-              {step === "sent"
-                ? `We sent a reset link to ${email}`
-                : "Enter your email and we'll send a reset link."}
+              {step === "success" ? "Your password has been updated." : "Make it something you'll remember."}
             </div>
           </div>
 
           {/* Body */}
           <div style={{ paddingTop: 32, paddingRight: 36, paddingBottom: 36, paddingLeft: 36 }}>
 
-            {step === "sent" ? (
-              /* ── Success state ── */
+            {step === "success" ? (
               <div>
                 <div style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "16px", borderRadius: 16,
+                  display: "flex", alignItems: "center", gap: 12, padding: "16px",
+                  borderRadius: 16, marginBottom: 24,
                   background: "rgba(143,203,168,0.10)",
                   border: "1px solid rgba(143,203,168,0.25)",
-                  marginBottom: 24,
                 }}>
                   <div style={{
                     width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
                     background: ACCENT, display: "flex", alignItems: "center",
                     justifyContent: "center", fontSize: 18,
                   }}>✓</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#ECF1ED", marginBottom: 2 }}>Reset link sent</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
-                      The link expires in 15 minutes. Check your spam folder if it doesn't arrive.
-                    </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#ECF1ED" }}>
+                    Password updated successfully
                   </div>
                 </div>
                 <button
                   onClick={() => navigate("/")}
                   style={{
-                    height: 52, width: "100%", border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: 14, background: "rgba(255,255,255,0.05)",
-                    color: "#ECF1ED", fontFamily: "inherit", fontSize: 15,
-                    fontWeight: 600, cursor: "pointer",
+                    height: 56, width: "100%", border: "none", borderRadius: 99,
+                    background: ACCENT, color: "#0B1310",
+                    fontFamily: "inherit", fontSize: 16, fontWeight: 700, cursor: "pointer",
                   }}
                 >
-                  Back to login
+                  Log in
                 </button>
-                <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#9DB0A5" }}>
-                  Didn't receive it?{" "}
-                  <span
-                    onClick={() => { setStep("form"); setEmail(""); }}
-                    style={{ color: ACCENT, fontWeight: 600, cursor: "pointer" }}
-                  >
-                    Try again
-                  </span>
-                </div>
               </div>
             ) : (
-              /* ── Email form ── */
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: "#9DB0A5", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>
-                    Email address
+                    New password
                   </div>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
-                    placeholder="you@example.com"
-                    style={{ ...inputStyle, color: email ? "#ECF1ED" : "rgba(255,255,255,0.3)" }}
+                    style={inputStyle}
+                  />
+                  <div style={{ fontSize: 11, color: "#6B7D73", marginTop: 6 }}>
+                    At least 8 characters, one uppercase letter and one number.
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#9DB0A5", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>
+                    Confirm password
+                  </div>
+                  <input
+                    type="password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    required
+                    style={{
+                      ...inputStyle,
+                      borderColor: confirm && confirm !== password
+                        ? "rgba(232,137,124,0.5)"
+                        : "rgba(255,255,255,0.12)",
+                    }}
                   />
                 </div>
 
@@ -157,33 +180,31 @@ export default function ForgotPassword() {
                     border: "1px solid rgba(232,137,124,0.3)",
                     color: "#E8897C",
                   }}>
-                    {error}
+                    {error}{" "}
+                    {error.toLowerCase().includes("expired") && (
+                      <span
+                        onClick={() => navigate("/forgot-password")}
+                        style={{ textDecoration: "underline", cursor: "pointer" }}
+                      >
+                        Request a new one.
+                      </span>
+                    )}
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !token}
                   style={{
                     height: 56, width: "100%", border: "none", borderRadius: 99,
                     background: ACCENT, color: "#0B1310",
                     fontFamily: "inherit", fontSize: 16, fontWeight: 700,
-                    cursor: loading ? "not-allowed" : "pointer",
-                    opacity: loading ? 0.7 : 1, marginTop: 4,
+                    cursor: (loading || !token) ? "not-allowed" : "pointer",
+                    opacity: (loading || !token) ? 0.7 : 1, marginTop: 4,
                   }}
                 >
-                  {loading ? "Sending…" : "Send reset link"}
+                  {loading ? "Updating…" : "Update password"}
                 </button>
-
-                <div style={{ textAlign: "center", fontSize: 13, color: "#9DB0A5" }}>
-                  Remember your password?{" "}
-                  <span
-                    onClick={() => navigate("/")}
-                    style={{ color: ACCENT, fontWeight: 600, cursor: "pointer" }}
-                  >
-                    Log in
-                  </span>
-                </div>
               </form>
             )}
           </div>
