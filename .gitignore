@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Environment — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Database
+backend/expenses.db
+backend/expenses.db-shm
+backend/expenses.db-wal
+
+# Node
+node_modules/
+frontend/build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
