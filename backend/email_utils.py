@@ -124,26 +124,32 @@ def verify_email_html(verify_url: str) -> str:
 
 # ── Sending functions ───────────────────────────────────────────────────────────
 
+def _brevo_send(to: str, subject: str, html: str) -> None:
+    import requests
+    resp = requests.post(
+        "https://api.brevo.com/v3/smtp/email",
+        headers={"api-key": settings.BREVO_API_KEY, "content-type": "application/json"},
+        json={
+            "sender": {"name": settings.MAIL_FROM_NAME, "email": settings.MAIL_FROM},
+            "to": [{"email": to}],
+            "subject": subject,
+            "htmlContent": html,
+        },
+        timeout=10,
+    )
+    if resp.status_code >= 400:
+        raise Exception(f"Brevo {resp.status_code}: {resp.text}")
+
+
 async def send_email(to: str, subject: str, html: str) -> None:
-    if not settings.SENDGRID_API_KEY:
+    if not settings.BREVO_API_KEY:
         print(f"\n[DEV EMAIL] To: {to}\nSubject: {subject}")
         urls = re.findall(r'href="(http[^"]+)"', html)
         if urls:
             print(f"Link: {urls[0]}\n")
         return
-
-    import sendgrid
-    from sendgrid.helpers.mail import Mail
-
-    message = Mail(
-        from_email=(settings.MAIL_FROM, settings.MAIL_FROM_NAME),
-        to_emails=to,
-        subject=subject,
-        html_content=html,
-    )
     try:
-        sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
-        await asyncio.to_thread(sg.send, message)
+        await asyncio.to_thread(_brevo_send, to, subject, html)
     except Exception as e:
         print(f"[EMAIL FAILED] To: {to} — {e}")
 

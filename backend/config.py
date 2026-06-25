@@ -8,8 +8,8 @@ class Settings(BaseSettings):
     ALLOWED_ORIGIN: str = "http://localhost:3000"
     FRONTEND_URL: str = "http://localhost:3000"
 
-    # SendGrid — leave blank to print emails to the console (dev mode)
-    SENDGRID_API_KEY: str = ""
+    # Brevo — leave blank to print emails to the console (dev mode)
+    BREVO_API_KEY: str = ""
     MAIL_FROM: str = "shanenbadwaik1234@gmail.com"
     MAIL_FROM_NAME: str = "Cairn"
 
