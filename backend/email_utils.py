@@ -142,8 +142,8 @@ async def send_email(to: str, subject: str, html: str) -> None:
         MAIL_PORT=settings.MAIL_PORT,
         MAIL_SERVER=settings.MAIL_SERVER,
         MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
-        MAIL_STARTTLS=True,
-        MAIL_SSL_TLS=False,
+        MAIL_STARTTLS=settings.MAIL_PORT != 465,
+        MAIL_SSL_TLS=settings.MAIL_PORT == 465,
         USE_CREDENTIALS=True,
         VALIDATE_CERTS=True,
     )
