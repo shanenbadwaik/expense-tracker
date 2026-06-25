@@ -58,5 +58,7 @@ input:-webkit-autofill:active {
   caret-color: #ECF1ED;
 }
 
-/* Hide scrollbars */
-::-webkit-scrollbar { width: 0; height: 0; }
+/* Hide all scrollbars globally */
+::-webkit-scrollbar        { width: 0; height: 0; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: transparent; }

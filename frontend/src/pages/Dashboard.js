@@ -1022,21 +1022,24 @@ export default function Dashboard() {
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} />
       <div style={{
-        position: "relative", marginTop: "auto",
-        borderRadius: "36px 36px 0 0",
+        position: "relative",
+        marginTop: isDesktop ? "auto" : "auto",
+        marginBottom: isDesktop ? "auto" : 0,
+        borderRadius: isDesktop ? 28 : "32px 32px 0 0",
         background: T.sheetBg,
-        borderTop: `1px solid ${T.border}`,
-        padding: "14px 24px 36px",
-        animation: "cairnSheet .3s cubic-bezier(.22,1,.36,1)",
-        boxShadow: "0 -24px 60px -20px rgba(0,0,0,0.5)",
-        maxWidth: isDesktop ? 520 : "100%",
-        marginLeft: isDesktop ? "auto" : 0,
-        marginRight: isDesktop ? "auto" : 0,
+        border: isDesktop ? `1px solid ${T.border}` : "none",
+        borderTop: isDesktop ? `1px solid ${T.border}` : `1px solid ${T.border}`,
+        padding: "10px 22px 22px",
+        animation: isDesktop ? "none" : "cairnSheet .3s cubic-bezier(.22,1,.36,1)",
+        boxShadow: "0 -24px 60px -20px rgba(0,0,0,0.6)",
+        maxWidth: isDesktop ? 480 : "100%",
+        marginLeft: "auto",
+        marginRight: "auto",
         width: "100%",
-        maxHeight: "90vh",
+        maxHeight: isDesktop ? "88vh" : "92vh",
         overflowY: "auto",
       }}>
-        <div style={{ width: 42, height: 5, borderRadius: 99, background: "rgba(255,255,255,0.22)", margin: "0 auto 20px" }} />
+        {!isDesktop && <div style={{ width: 40, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.20)", margin: "0 auto 12px" }} />}
         {content}
       </div>
     </div>
@@ -1045,23 +1048,24 @@ export default function Dashboard() {
   // ── Add expense modal ──────────────────────────────────────────────────────────
   const addExpenseModal = showModal ? sheetWrap(
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <button onClick={() => setShowModal(false)} style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: T.chip, color: T.text2, fontSize: 16, cursor: "pointer" }}>✕</button>
-        <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>New expense</span>
-        <span style={{ width: 34 }} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <button onClick={() => setShowModal(false)} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: T.chip, color: T.text2, fontSize: 15, cursor: "pointer", flexShrink: 0 }}>✕</button>
+        <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>New expense</span>
+        <span style={{ width: 32 }} />
       </div>
 
-      <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: T.text2, marginBottom: 2 }}>Amount</div>
-        <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 54, lineHeight: 1.1, fontVariantNumeric: "tabular-nums", color: T.text }}>
-          <span style={{ color: T.text3 }}>{currSym(selCurrency)}</span>{amount ? fmt(Number(amount)) : "0"}
+      {/* Amount display */}
+      <div style={{ textAlign: "center", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: T.text2, marginBottom: 2, letterSpacing: ".06em", textTransform: "uppercase" }}>Amount</div>
+        <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 46, lineHeight: 1, fontVariantNumeric: "tabular-nums", color: T.text }}>
+          <span style={{ color: T.text3, fontSize: 32 }}>{currSym(selCurrency)}</span>{amount ? fmt(Number(amount)) : "0"}
         </div>
       </div>
 
-      {/* Category chips */}
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 14, paddingBottom: 2 }}>
+      {/* Category chips — paddingBottom leaves room so scrollbar doesn't overlap */}
+      <div style={{ display: "flex", gap: 7, overflowX: "auto", marginBottom: 10, paddingBottom: 6, msOverflowStyle: "none", scrollbarWidth: "none" }}>
         {Object.keys(CAT_META).map((cat) => (
-          <div key={cat} onClick={() => setCategory(cat)} style={chipStyle(cat, category)}>
+          <div key={cat} onClick={() => setCategory(cat)} style={{ ...chipStyle(cat, category), height: 34, fontSize: 12, padding: "0 11px" }}>
             {CAT_META[cat].emoji} {cat}
           </div>
         ))}
@@ -1071,38 +1075,38 @@ export default function Dashboard() {
       <input
         value={description} onChange={(e) => setDescription(e.target.value)}
         placeholder="Add a note (optional)"
-        style={{ ...inputSt, marginBottom: 10 }}
+        style={{ ...inputSt, height: 42, marginBottom: 8 }}
       />
 
       {/* Date + Currency row */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
         <input
           type="date" value={expenseDate} max={todayStr()}
           onChange={(e) => setExpenseDate(e.target.value)}
-          style={{ ...inputSt, flex: 1 }}
+          style={{ ...inputSt, height: 42, flex: 1 }}
         />
         <select
           value={selCurrency} onChange={(e) => setSelCurrency(e.target.value)}
-          style={{ ...selectSt, flex: "0 0 100px" }}
+          style={{ ...selectSt, height: 42, flex: "0 0 88px" }}
         >
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
-      {/* Numpad */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 9, marginBottom: 14 }}>
+      {/* Numpad — compact keys */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7, marginBottom: 10 }}>
         {["1","2","3","4","5","6","7","8","9","","0","⌫"].map((k, i) => (
           <div key={i} onClick={() => k && pressKey(k === "⌫" ? "back" : k)} style={{
-            height: 50, display: "flex", alignItems: "center", justifyContent: "center",
-            borderRadius: 16, background: k ? T.chip : "transparent",
+            height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+            borderRadius: 14, background: k ? T.chip : "transparent",
             border: k ? `1px solid ${T.line}` : "none",
-            fontSize: 21, fontWeight: 600, color: T.text,
+            fontSize: 19, fontWeight: 600, color: T.text,
             cursor: k ? "pointer" : "default", userSelect: "none", fontVariantNumeric: "tabular-nums",
           }}>{k}</div>
         ))}
       </div>
 
-      <button onClick={saveExpense} style={{ width: "100%", height: 54, border: "none", borderRadius: 99, background: T.accentBg, color: T.accentFg, fontFamily: "inherit", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+      <button onClick={saveExpense} style={{ width: "100%", height: 50, border: "none", borderRadius: 99, background: T.accentBg, color: T.accentFg, fontFamily: "inherit", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
         Save expense
       </button>
     </>,
@@ -1123,9 +1127,9 @@ export default function Dashboard() {
         />
       </div>
 
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 12, paddingBottom: 2 }}>
+      <div style={{ display: "flex", gap: 7, overflowX: "auto", marginBottom: 12, paddingBottom: 6, msOverflowStyle: "none", scrollbarWidth: "none" }}>
         {Object.keys(CAT_META).map((cat) => (
-          <div key={cat} onClick={() => setEditCategory(cat)} style={chipStyle(cat, editCategory)}>
+          <div key={cat} onClick={() => setEditCategory(cat)} style={{ ...chipStyle(cat, editCategory), height: 34, fontSize: 12, padding: "0 11px" }}>
             {CAT_META[cat].emoji} {cat}
           </div>
         ))}
@@ -1178,9 +1182,9 @@ export default function Dashboard() {
       </div>
 
       {/* Source chips */}
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 12, paddingBottom: 2 }}>
+      <div style={{ display: "flex", gap: 7, overflowX: "auto", marginBottom: 12, paddingBottom: 6, msOverflowStyle: "none", scrollbarWidth: "none" }}>
         {INCOME_SOURCES.map((src) => (
-          <div key={src} onClick={() => setIncomeSource(src)} style={chipStyle(src, incomeSource)}>
+          <div key={src} onClick={() => setIncomeSource(src)} style={{ ...chipStyle(src, incomeSource), height: 34, fontSize: 12, padding: "0 11px" }}>
             {INCOME_META[src]?.emoji} {src}
           </div>
         ))}
@@ -1227,9 +1231,9 @@ export default function Dashboard() {
         />
       </div>
 
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 12, paddingBottom: 2 }}>
+      <div style={{ display: "flex", gap: 7, overflowX: "auto", marginBottom: 12, paddingBottom: 6, msOverflowStyle: "none", scrollbarWidth: "none" }}>
         {Object.keys(CAT_META).map((cat) => (
-          <div key={cat} onClick={() => setRecurCat(cat)} style={chipStyle(cat, recurCat)}>
+          <div key={cat} onClick={() => setRecurCat(cat)} style={{ ...chipStyle(cat, recurCat), height: 34, fontSize: 12, padding: "0 11px" }}>
             {CAT_META[cat].emoji} {cat}
           </div>
         ))}
