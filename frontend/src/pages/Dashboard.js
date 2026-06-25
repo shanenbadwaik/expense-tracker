@@ -615,16 +615,22 @@ export default function Dashboard() {
     paddingRight: 32,  /* leave room for the custom arrow */
   };
 
-  /* Wrapper that adds a ‹›-style chevron over any <select> using selectSt */
+  /* Wrapper that adds a chevron arrow over any currency <select> */
   const CurrencySelect = ({ value, onChange, style }) => (
     <div style={{ position: "relative", ...style }}>
       <select value={value} onChange={onChange} style={{ ...selectSt, width: "100%", height: "100%" }}>
         {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
       </select>
-      <span style={{
-        position: "absolute", right: 11, top: "50%", transform: "translateY(-50%)",
-        fontSize: 14, fontWeight: 700, color: T.text2, pointerEvents: "none", lineHeight: 1,
-      }}>⌄</span>
+      {/* Flex overlay so the arrow is always perfectly centred vertically */}
+      <div style={{
+        position: "absolute", top: 0, right: 0, bottom: 0,
+        width: 32, pointerEvents: "none",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 1L6 7L11 1" stroke={T.text2} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
     </div>
   );
 
