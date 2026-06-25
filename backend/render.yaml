@@ -5,19 +5,17 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cairn-db
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_ORIGIN
-        sync: false        # set this to your Vercel URL after deploying the frontend
+        value: https://frontend-xi-one-69.vercel.app
       - key: FRONTEND_URL
-        sync: false        # same Vercel URL
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
-      - key: MAIL_FROM
-        sync: false
-    disk:
-      name: cairn-db
-      mountPath: /data
-      sizeGB: 1
+        value: https://frontend-xi-one-69.vercel.app
+
+databases:
+  - name: cairn-db
+    plan: free
