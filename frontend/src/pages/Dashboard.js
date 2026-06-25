@@ -1079,13 +1079,14 @@ export default function Dashboard() {
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} />
       <div style={{
         position: "relative",
-        marginTop: isDesktop ? "auto" : "auto",
+        marginTop: "auto",
         marginBottom: isDesktop ? "auto" : 0,
         borderRadius: isDesktop ? 28 : "32px 32px 0 0",
         background: T.sheetBg,
         border: isDesktop ? `1px solid ${T.border}` : "none",
-        borderTop: isDesktop ? `1px solid ${T.border}` : `1px solid ${T.border}`,
-        padding: "10px 22px 22px",
+        borderTop: `1px solid ${T.border}`,
+        padding: isDesktop ? "10px 22px 22px" : "10px 18px 32px",
+        boxSizing: "border-box",
         animation: isDesktop ? "none" : "cairnSheet .3s cubic-bezier(.22,1,.36,1)",
         boxShadow: "0 -24px 60px -20px rgba(0,0,0,0.6)",
         maxWidth: isDesktop ? 480 : "100%",
@@ -1139,11 +1140,11 @@ export default function Dashboard() {
         <input
           type="date" value={expenseDate} max={todayStr()}
           onChange={(e) => setExpenseDate(e.target.value)}
-          style={{ ...inputSt, height: 42, flex: 1 }}
+          style={{ ...inputSt, height: 42, flex: 1, minWidth: 0 }}
         />
         <CurrencySelect
           value={selCurrency} onChange={(e) => setSelCurrency(e.target.value)}
-          style={{ flex: "0 0 88px", height: 42 }}
+          style={{ flex: "0 0 80px", height: 42 }}
         />
       </div>
 
@@ -1195,15 +1196,15 @@ export default function Dashboard() {
         style={{ ...inputSt, marginBottom: 12 }}
       />
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <input
           type="date" value={editDate} max={todayStr()}
           onChange={(e) => setEditDate(e.target.value)}
-          style={{ ...inputSt, flex: 1 }}
+          style={{ ...inputSt, flex: 1, minWidth: 0 }}
         />
         <CurrencySelect
           value={editCurrency} onChange={(e) => setEditCurrency(e.target.value)}
-          style={{ flex: "0 0 100px", height: 46 }}
+          style={{ flex: "0 0 80px", height: 46 }}
         />
       </div>
 
@@ -1248,15 +1249,15 @@ export default function Dashboard() {
         style={{ ...inputSt, marginBottom: 12 }}
       />
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <input
           type="date" value={incomeDate} max={todayStr()}
           onChange={(e) => setIncomeDate(e.target.value)}
-          style={{ ...inputSt, flex: 1 }}
+          style={{ ...inputSt, flex: 1, minWidth: 0 }}
         />
         <CurrencySelect
           value={incomeCur} onChange={(e) => setIncomeCur(e.target.value)}
-          style={{ flex: "0 0 100px", height: 46 }}
+          style={{ flex: "0 0 80px", height: 46 }}
         />
       </div>
 
