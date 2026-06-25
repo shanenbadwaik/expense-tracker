@@ -227,6 +227,9 @@ def login(
     if not user or not password_ok:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="Please verify your email address before logging in. Check your inbox for the verification link.")
+
     token = create_access_token(data={"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
 
