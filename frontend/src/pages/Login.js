@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API from "../api";
 
 const ACCENT = "#8FCBA8";
 
@@ -40,7 +41,7 @@ export default function Login() {
     setLoading(true);
     try {
       if (mode === "register") {
-        await axios.post("http://127.0.0.1:8000/register", {
+        await axios.post(`${API}/register`, {
           username: formData.username,
           email:    formData.email,
           password: formData.password,
@@ -52,7 +53,7 @@ export default function Login() {
         const body = new URLSearchParams();
         body.append("username", formData.email);
         body.append("password", formData.password);
-        const res = await axios.post("http://127.0.0.1:8000/login", body, {
+        const res = await axios.post(`${API}/login`, body, {
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
         localStorage.setItem("token", res.data.access_token);

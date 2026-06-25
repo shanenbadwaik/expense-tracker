@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: cairn-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGIN
+        sync: false        # set this to your Vercel URL after deploying the frontend
+      - key: FRONTEND_URL
+        sync: false        # same Vercel URL
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+    disk:
+      name: cairn-db
+      mountPath: /data
+      sizeGB: 1

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API from "../api";
 
 const ACCENT = "#8FCBA8";
 
@@ -18,7 +19,7 @@ export default function VerifyEmail() {
       return;
     }
     axios
-      .get(`http://127.0.0.1:8000/verify-email?token=${encodeURIComponent(token)}`)
+      .get(`${API}/verify-email?token=${encodeURIComponent(token)}`)
       .then(() => setStatus("success"))
       .catch((err) => {
         setStatus("error");

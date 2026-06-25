@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API from "../api";
 
 const ACCENT = "#8FCBA8";
 
@@ -46,7 +47,7 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      await axios.post("http://127.0.0.1:8000/reset-password", {
+      await axios.post(`${API}/reset-password`, {
         token,
         new_password: password,
       });

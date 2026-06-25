@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import API from "../api";
 
 const ACCENT = "#8FCBA8";
 
@@ -28,7 +29,7 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
     try {
-      await axios.post("http://127.0.0.1:8000/forgot-password", { email });
+      await axios.post(`${API}/forgot-password`, { email });
       setStep("sent");
     } catch (err) {
       setError(err.response?.data?.detail || "Something went wrong. Please try again.");

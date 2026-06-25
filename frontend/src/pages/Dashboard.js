@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import API from "../api";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 // ── Design tokens ───────────────────────────────────────────────────────────────
@@ -288,35 +289,35 @@ export default function Dashboard() {
   // ── Data fetching ──────────────────────────────────────────────────────────────
   const fetchExpenses = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/expenses", headers);
+      const res = await axios.get(`${API}/expenses`, headers);
       setExpenses(res.data);
     } catch (e) { console.log(e); }
   };
 
   const fetchIncome = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/income", headers);
+      const res = await axios.get(`${API}/income`, headers);
       setIncome(res.data);
     } catch (e) { console.log(e); }
   };
 
   const fetchBudgets = async () => {
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/budgets?month=${currMonth()}`, headers);
+      const res = await axios.get(`${API}/budgets?month=${currMonth()}`, headers);
       setBudgets(res.data);
     } catch (e) { console.log(e); }
   };
 
   const fetchRecurring = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/recurring", headers);
+      const res = await axios.get(`${API}/recurring`, headers);
       setRecurring(res.data);
     } catch (e) { console.log(e); }
   };
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/profile", headers);
+      const res = await axios.get(`${API}/profile`, headers);
       setProfile(res.data);
       if (!res.data.is_verified) setVerifyBanner(true);
     } catch (e) { console.log(e); }
@@ -365,7 +366,7 @@ export default function Dashboard() {
     const amt = Number(amount || 0);
     if (!amt) { showToast("Enter an amount first", "error"); return; }
     try {
-      await axios.post("http://127.0.0.1:8000/expenses", {
+      await axios.post(`${API}/expenses`, {
         amount: amt, category,
         description: description || category,
         date: expenseDate,
@@ -393,7 +394,7 @@ export default function Dashboard() {
     const amt = Number(editAmount || 0);
     if (!amt) { showToast("Amount can't be zero", "error"); return; }
     try {
-      await axios.put(`http://127.0.0.1:8000/expenses/${editTarget.id}`, {
+      await axios.put(`${API}/expenses/${editTarget.id}`, {
         amount: amt,
         category: editCategory,
         description: editDesc,
@@ -413,11 +414,11 @@ export default function Dashboard() {
     if (!deleteTarget) return;
     try {
       if (deleteTarget.type === "expense") {
-        await axios.delete(`http://127.0.0.1:8000/expenses/${deleteTarget.id}`, headers);
+        await axios.delete(`${API}/expenses/${deleteTarget.id}`, headers);
         await fetchExpenses();
         showToast("Expense deleted");
       } else {
-        await axios.delete(`http://127.0.0.1:8000/income/${deleteTarget.id}`, headers);
+        await axios.delete(`${API}/income/${deleteTarget.id}`, headers);
         await fetchIncome();
         showToast("Income entry deleted");
       }
@@ -433,7 +434,7 @@ export default function Dashboard() {
     const amt = Number(incomeAmt || 0);
     if (!amt) { showToast("Enter an amount first", "error"); return; }
     try {
-      await axios.post("http://127.0.0.1:8000/income", {
+      await axios.post(`${API}/income`, {
         amount: amt,
         source: incomeSource,
         description: incomeDesc || incomeSource,
@@ -455,7 +456,7 @@ export default function Dashboard() {
     const amt = Number(budgetAmt || 0);
     if (!amt) { showToast("Enter a budget amount", "error"); return; }
     try {
-      await axios.post("http://127.0.0.1:8000/budgets", {
+      await axios.post(`${API}/budgets`, {
         category: budgetCat,
         amount: amt,
         month: currMonth(),
@@ -470,7 +471,7 @@ export default function Dashboard() {
 
   const deleteBudget = async (id) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/budgets/${id}`, headers);
+      await axios.delete(`${API}/budgets/${id}`, headers);
       await fetchBudgets();
       showToast("Budget removed");
     } catch (e) { showToast("Could not remove budget", "error"); }
@@ -481,7 +482,7 @@ export default function Dashboard() {
     const amt = Number(recurAmt || 0);
     if (!amt) { showToast("Enter an amount", "error"); return; }
     try {
-      await axios.post("http://127.0.0.1:8000/recurring", {
+      await axios.post(`${API}/recurring`, {
         amount: amt,
         category: recurCat,
         description: recurDesc || recurCat,
@@ -500,14 +501,14 @@ export default function Dashboard() {
 
   const toggleRecurring = async (id, active) => {
     try {
-      await axios.put(`http://127.0.0.1:8000/recurring/${id}`, { active }, headers);
+      await axios.put(`${API}/recurring/${id}`, { active }, headers);
       await fetchRecurring();
     } catch (e) { showToast("Could not update", "error"); }
   };
 
   const deleteRecurring = async (id) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/recurring/${id}`, headers);
+      await axios.delete(`${API}/recurring/${id}`, headers);
       await fetchRecurring();
       showToast("Recurring expense removed");
     } catch (e) { showToast("Could not delete", "error"); }
@@ -516,7 +517,7 @@ export default function Dashboard() {
   // ── CSV export ─────────────────────────────────────────────────────────────────
   const exportCSV = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/expenses/export", {
+      const res = await axios.get(`${API}/expenses/export`, {
         ...headers,
         responseType: "blob",
       });
@@ -536,7 +537,7 @@ export default function Dashboard() {
   const resendVerification = async () => {
     setResendsLoading(true);
     try {
-      await axios.post("http://127.0.0.1:8000/resend-verification", {}, headers);
+      await axios.post(`${API}/resend-verification`, {}, headers);
       showToast("Verification email sent — check your inbox.", "success");
     } catch (e) {
       showToast("Couldn't send email. Try again shortly.", "error");
@@ -812,7 +813,7 @@ export default function Dashboard() {
       const amt = Number(budgetEditAmt || 0);
       if (!amt) { showToast("Enter an amount", "error"); return; }
       try {
-        await axios.post("http://127.0.0.1:8000/budgets", {
+        await axios.post(`${API}/budgets`, {
           category: cat, amount: amt, month: currMonth(),
         }, headers);
         setBudgetEditCat(null); setBudgetEditAmt("");
