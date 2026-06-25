@@ -1,19 +1,19 @@
 /* ── Full-viewport reset ──────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
-html {
-  width: 100%;
-  height: 100%;
+html, body, #root {
   margin: 0;
   padding: 0;
+  width: 100%;
+  background: #070D0B;   /* every layer is dark — no white can bleed through */
+}
+
+html {
+  height: 100%;
 }
 
 body {
-  width: 100%;
   min-height: 100%;
-  margin: 0;
-  padding: 0;
-  background: #070D0B;   /* fallback so no white ever shows behind the app */
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -21,11 +21,9 @@ body {
 }
 
 #root {
-  width: 100%;
-  min-height: 100vh;     /* stretch to full viewport even when content is short */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #070D0B;
 }
 
 ::selection { background: #8FCBA8; color: #0B1310; }
