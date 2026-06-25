@@ -1223,7 +1223,11 @@ export default function Dashboard() {
   // ── Income modal ───────────────────────────────────────────────────────────────
   const incomeModalJsx = incomeModal ? sheetWrap(
     <>
-      <div style={{ fontSize: 16, fontWeight: 700, color: T.text, textAlign: "center", marginBottom: 20 }}>Log income</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <button onClick={() => setIncomeModal(false)} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: T.chip, color: T.text2, fontSize: 15, cursor: "pointer", flexShrink: 0 }}>✕</button>
+        <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Log Income</span>
+        <span style={{ width: 32 }} />
+      </div>
 
       <div style={{ marginBottom: 12 }}>
         <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>Amount</div>
