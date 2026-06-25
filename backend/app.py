@@ -1,5 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks
+import calendar
+import csv
+import io
+from datetime import datetime, timedelta, timezone, date as date_type
+from typing import Optional
+
+from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -9,7 +16,6 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
-from datetime import datetime, timedelta, timezone
 
 import models
 import schemas
@@ -21,28 +27,31 @@ from email_utils import (
     send_reset_email, send_verification_email,
 )
 
-# ── Bootstrap ───────────────────────────────────────────────────────────────────
+# ── Bootstrap ────────────────────────────────────────────────────────────────────
 
 def run_migrations():
-    """Add new columns/tables to an existing database without wiping data."""
     with engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0 NOT NULL"))
-            conn.commit()
-        except Exception:
-            pass  # column already exists
+        for stmt in [
+            "ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0 NOT NULL",
+            "ALTER TABLE expenses ADD COLUMN currency VARCHAR DEFAULT 'INR'",
+        ]:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+            except Exception:
+                pass  # column already exists
     models.Base.metadata.create_all(bind=engine)
 
 run_migrations()
 
-# ── Rate limiter ────────────────────────────────────────────────────────────────
+# ── Rate limiter ─────────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── CORS ────────────────────────────────────────────────────────────────────────
+# ── CORS ─────────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.ALLOWED_ORIGIN],
@@ -51,7 +60,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-# ── Auth helpers ─────────────────────────────────────────────────────────────────
+# ── Auth helpers ──────────────────────────────────────────────────────────────────
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
@@ -101,7 +110,68 @@ def _utc(dt: datetime) -> datetime:
     return dt
 
 
-# ── Routes ───────────────────────────────────────────────────────────────────────
+# ── Recurring expense helpers ─────────────────────────────────────────────────────
+
+def _advance_date(current: date_type, frequency: str, day_of_month: int) -> date_type:
+    if frequency == "weekly":
+        return current + timedelta(weeks=1)
+    elif frequency == "yearly":
+        try:
+            return current.replace(year=current.year + 1)
+        except ValueError:
+            return current + timedelta(days=366)
+    else:  # monthly
+        m = current.month + 1
+        y = current.year
+        if m > 12:
+            m, y = 1, y + 1
+        max_day = calendar.monthrange(y, m)[1]
+        return date_type(y, m, min(day_of_month, max_day))
+
+
+def _initial_due_date(frequency: str, day_of_month: int) -> date_type:
+    today = date_type.today()
+    if frequency in ("weekly", "yearly"):
+        return today
+    max_day = calendar.monthrange(today.year, today.month)[1]
+    target = today.replace(day=min(day_of_month, max_day))
+    if target < today:
+        m = today.month + 1
+        y = today.year
+        if m > 12:
+            m, y = 1, y + 1
+        max_day = calendar.monthrange(y, m)[1]
+        target = date_type(y, m, min(day_of_month, max_day))
+    return target
+
+
+def process_recurring_for_user(user_id: int, db: Session):
+    today = date_type.today()
+    due = (
+        db.query(models.RecurringExpense)
+        .filter(
+            models.RecurringExpense.user_id == user_id,
+            models.RecurringExpense.active == True,
+            models.RecurringExpense.next_due_date != None,
+            models.RecurringExpense.next_due_date <= today,
+        )
+        .all()
+    )
+    for rec in due:
+        while rec.next_due_date and rec.next_due_date <= today:
+            db.add(models.Expense(
+                amount=rec.amount,
+                category=rec.category,
+                description=rec.description or f"Recurring: {rec.category}",
+                date=rec.next_due_date,
+                currency=rec.currency or "INR",
+                user_id=user_id,
+            ))
+            rec.next_due_date = _advance_date(rec.next_due_date, rec.frequency, rec.day_of_month)
+    db.commit()
+
+
+# ── Routes ────────────────────────────────────────────────────────────────────────
 
 @app.get("/")
 def home():
@@ -161,7 +231,7 @@ def login(
     return {"access_token": token, "token_type": "bearer"}
 
 
-# ── Password reset ───────────────────────────────────────────────────────────────
+# ── Password reset ────────────────────────────────────────────────────────────────
 
 @app.post("/forgot-password")
 @limiter.limit("3/hour")
@@ -177,7 +247,6 @@ async def forgot_password(
     if not user:
         return SAFE_RESPONSE
 
-    # Invalidate any existing unused tokens for this user
     db.query(models.PasswordResetToken).filter(
         models.PasswordResetToken.user_id == user.id,
         models.PasswordResetToken.used == False,
@@ -223,7 +292,7 @@ def reset_password(
     return {"message": "Password reset successfully. You can now log in."}
 
 
-# ── Email verification ────────────────────────────────────────────────────────────
+# ── Email verification ─────────────────────────────────────────────────────────────
 
 @app.get("/verify-email")
 def verify_email(token: str, db: Session = Depends(get_db)):
@@ -276,7 +345,7 @@ async def resend_verification(
     return {"message": "Verification email sent. Check your inbox."}
 
 
-# ── Expenses ─────────────────────────────────────────────────────────────────────
+# ── Expenses ──────────────────────────────────────────────────────────────────────
 
 @app.post("/expenses")
 def add_expense(
@@ -289,29 +358,342 @@ def add_expense(
         category=expense.category,
         description=expense.description,
         date=expense.date,
+        currency=expense.currency,
         user_id=current_user.id,
     )
     db.add(new_expense)
     db.commit()
-    return {"message": "Expense added successfully"}
+    db.refresh(new_expense)
+    return new_expense
+
+
+@app.get("/expenses/export")
+def export_expenses(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    expenses = (
+        db.query(models.Expense)
+        .filter(models.Expense.user_id == current_user.id)
+        .order_by(models.Expense.date.desc())
+        .all()
+    )
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Date", "Category", "Amount", "Currency", "Description"])
+    for e in expenses:
+        writer.writerow([e.date, e.category, e.amount, e.currency or "INR", e.description or ""])
+    output.seek(0)
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode()),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=cairn-expenses-{current_user.username}.csv"},
+    )
 
 
 @app.get("/expenses")
 def get_expenses(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
-    limit: int = 200,
-    offset: int = 0,
+    category: Optional[str] = Query(None),
+    date_from: Optional[date_type] = Query(None),
+    date_to: Optional[date_type] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(200, le=500),
+    offset: int = Query(0, ge=0),
+):
+    process_recurring_for_user(current_user.id, db)
+
+    q = db.query(models.Expense).filter(models.Expense.user_id == current_user.id)
+
+    if category:
+        q = q.filter(models.Expense.category == category)
+    if date_from:
+        q = q.filter(models.Expense.date >= date_from)
+    if date_to:
+        q = q.filter(models.Expense.date <= date_to)
+    if search:
+        q = q.filter(models.Expense.description.ilike(f"%{search}%"))
+
+    return q.order_by(models.Expense.date.desc()).limit(min(limit, 500)).offset(offset).all()
+
+
+@app.put("/expenses/{expense_id}")
+def update_expense(
+    expense_id: int,
+    body: schemas.ExpenseUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    expense = db.query(models.Expense).filter(
+        models.Expense.id == expense_id,
+        models.Expense.user_id == current_user.id,
+    ).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    if body.amount is not None:
+        expense.amount = body.amount
+    if body.category is not None:
+        expense.category = body.category
+    if body.date is not None:
+        expense.date = body.date
+    if body.description is not None:
+        expense.description = body.description.strip()
+    if body.currency is not None:
+        expense.currency = body.currency
+
+    db.commit()
+    db.refresh(expense)
+    return expense
+
+
+@app.delete("/expenses/{expense_id}")
+def delete_expense(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    expense = db.query(models.Expense).filter(
+        models.Expense.id == expense_id,
+        models.Expense.user_id == current_user.id,
+    ).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    db.delete(expense)
+    db.commit()
+    return {"message": "Expense deleted"}
+
+
+# ── Income ────────────────────────────────────────────────────────────────────────
+
+@app.post("/income")
+def add_income(
+    income: schemas.IncomeCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    new_income = models.Income(
+        amount=income.amount,
+        source=income.source,
+        description=income.description,
+        date=income.date,
+        currency=income.currency,
+        user_id=current_user.id,
+    )
+    db.add(new_income)
+    db.commit()
+    db.refresh(new_income)
+    return new_income
+
+
+@app.get("/income")
+def get_income(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+    limit: int = Query(200, le=500),
+    offset: int = Query(0, ge=0),
 ):
     return (
-        db.query(models.Expense)
-        .filter(models.Expense.user_id == current_user.id)
-        .order_by(models.Expense.date.desc())
-        .limit(min(limit, 200))
+        db.query(models.Income)
+        .filter(models.Income.user_id == current_user.id)
+        .order_by(models.Income.date.desc())
+        .limit(min(limit, 500))
         .offset(offset)
         .all()
     )
 
+
+@app.put("/income/{income_id}")
+def update_income(
+    income_id: int,
+    body: schemas.IncomeUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    income = db.query(models.Income).filter(
+        models.Income.id == income_id,
+        models.Income.user_id == current_user.id,
+    ).first()
+    if not income:
+        raise HTTPException(status_code=404, detail="Income entry not found")
+
+    if body.amount is not None:
+        income.amount = body.amount
+    if body.source is not None:
+        income.source = body.source
+    if body.date is not None:
+        income.date = body.date
+    if body.description is not None:
+        income.description = body.description.strip()
+    if body.currency is not None:
+        income.currency = body.currency
+
+    db.commit()
+    db.refresh(income)
+    return income
+
+
+@app.delete("/income/{income_id}")
+def delete_income(
+    income_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    income = db.query(models.Income).filter(
+        models.Income.id == income_id,
+        models.Income.user_id == current_user.id,
+    ).first()
+    if not income:
+        raise HTTPException(status_code=404, detail="Income entry not found")
+
+    db.delete(income)
+    db.commit()
+    return {"message": "Income entry deleted"}
+
+
+# ── Budgets ───────────────────────────────────────────────────────────────────────
+
+@app.post("/budgets")
+def upsert_budget(
+    body: schemas.BudgetCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    existing = db.query(models.Budget).filter(
+        models.Budget.user_id == current_user.id,
+        models.Budget.category == body.category,
+        models.Budget.month == body.month,
+    ).first()
+
+    if existing:
+        existing.amount = body.amount
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    budget = models.Budget(
+        category=body.category,
+        amount=body.amount,
+        month=body.month,
+        user_id=current_user.id,
+    )
+    db.add(budget)
+    db.commit()
+    db.refresh(budget)
+    return budget
+
+
+@app.get("/budgets")
+def get_budgets(
+    month: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    q = db.query(models.Budget).filter(models.Budget.user_id == current_user.id)
+    if month:
+        q = q.filter(models.Budget.month == month)
+    return q.all()
+
+
+@app.delete("/budgets/{budget_id}")
+def delete_budget(
+    budget_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    budget = db.query(models.Budget).filter(
+        models.Budget.id == budget_id,
+        models.Budget.user_id == current_user.id,
+    ).first()
+    if not budget:
+        raise HTTPException(status_code=404, detail="Budget not found")
+
+    db.delete(budget)
+    db.commit()
+    return {"message": "Budget deleted"}
+
+
+# ── Recurring expenses ────────────────────────────────────────────────────────────
+
+@app.post("/recurring")
+def add_recurring(
+    body: schemas.RecurringExpenseCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    rec = models.RecurringExpense(
+        amount=body.amount,
+        category=body.category,
+        description=body.description,
+        currency=body.currency,
+        frequency=body.frequency,
+        day_of_month=body.day_of_month,
+        active=True,
+        next_due_date=_initial_due_date(body.frequency, body.day_of_month),
+        user_id=current_user.id,
+    )
+    db.add(rec)
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
+@app.get("/recurring")
+def get_recurring(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return (
+        db.query(models.RecurringExpense)
+        .filter(models.RecurringExpense.user_id == current_user.id)
+        .order_by(models.RecurringExpense.id.asc())
+        .all()
+    )
+
+
+@app.put("/recurring/{recurring_id}")
+def update_recurring(
+    recurring_id: int,
+    body: dict,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    rec = db.query(models.RecurringExpense).filter(
+        models.RecurringExpense.id == recurring_id,
+        models.RecurringExpense.user_id == current_user.id,
+    ).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Recurring expense not found")
+
+    if "active" in body:
+        rec.active = bool(body["active"])
+
+    db.commit()
+    db.refresh(rec)
+    return rec
+
+
+@app.delete("/recurring/{recurring_id}")
+def delete_recurring(
+    recurring_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    rec = db.query(models.RecurringExpense).filter(
+        models.RecurringExpense.id == recurring_id,
+        models.RecurringExpense.user_id == current_user.id,
+    ).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Recurring expense not found")
+
+    db.delete(rec)
+    db.commit()
+    return {"message": "Recurring expense deleted"}
+
+
+# ── Profile ───────────────────────────────────────────────────────────────────────
 
 @app.get("/profile")
 def get_profile(current_user: models.User = Depends(get_current_user)):
