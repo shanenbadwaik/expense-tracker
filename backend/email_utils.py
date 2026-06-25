@@ -142,7 +142,10 @@ async def send_email(to: str, subject: str, html: str) -> None:
         "subject": subject,
         "html": html,
     }
-    await asyncio.to_thread(resend.Emails.send, params)
+    try:
+        await asyncio.to_thread(resend.Emails.send, params)
+    except Exception as e:
+        print(f"[EMAIL FAILED] To: {to} — {e}")
 
 
 async def send_reset_email(to: str, raw_token: str) -> None:
