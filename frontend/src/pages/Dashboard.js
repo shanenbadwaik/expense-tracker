@@ -1341,7 +1341,7 @@ export default function Dashboard() {
   // ════════════════════════════════════════════════════════════════════════════════
   if (isDesktop) {
     return (
-      <div style={{ minHeight: "100vh", background: T.rootBg, color: T.text, fontFamily: "'Hanken Grotesk', system-ui, sans-serif", display: "flex" }}>
+      <div style={{ minHeight: "100vh", width: "100%", background: T.rootBg, color: T.text, fontFamily: "'Hanken Grotesk', system-ui, sans-serif", display: "flex" }}>
         {toastJsx}
         {deleteConfirmJsx}
 
@@ -1545,7 +1545,7 @@ export default function Dashboard() {
   // MOBILE LAYOUT
   // ════════════════════════════════════════════════════════════════════════════════
   return (
-    <div style={{ minHeight: "100vh", background: T.rootBg, color: T.text, fontFamily: "'Hanken Grotesk', system-ui, sans-serif", display: "flex", flexDirection: "column", position: "relative" }}>
+    <div style={{ minHeight: "100vh", width: "100%", background: T.rootBg, color: T.text, fontFamily: "'Hanken Grotesk', system-ui, sans-serif", display: "flex", flexDirection: "column", position: "relative" }}>
       {toastJsx}
       {verifyBannerJsx}
       {deleteConfirmJsx}

@@ -1,21 +1,31 @@
-* { box-sizing: border-box; }
+/* ── Full-viewport reset ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
-html, body, #root {
+html {
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
-  background: #070D0B;
-  min-height: 100%;
 }
 
 body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #070D0B;   /* fallback so no white ever shows behind the app */
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 #root {
+  width: 100%;
+  min-height: 100vh;     /* stretch to full viewport even when content is short */
   display: flex;
   flex-direction: column;
+  background: #070D0B;
 }
 
 ::selection { background: #8FCBA8; color: #0B1310; }
@@ -34,14 +44,14 @@ body {
 input, textarea { box-sizing: border-box; }
 input::placeholder, textarea::placeholder { color: #6B7D73; }
 
-/* Remove native system appearance so our background/border styles apply */
+/* Remove native OS appearance — prevents system-white around selects/dates */
 select {
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
 }
 
-/* Date picker — tint the calendar icon to match the dark theme */
+/* Tint the calendar icon to match the dark theme */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.55) sepia(0.2) hue-rotate(100deg);
   cursor: pointer;
@@ -58,7 +68,7 @@ input:-webkit-autofill:active {
   caret-color: #ECF1ED;
 }
 
-/* Hide all scrollbars globally */
+/* ── Hide all scrollbar chrome ───────────────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 0; height: 0; }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: transparent; }

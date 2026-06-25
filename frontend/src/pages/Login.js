@@ -70,6 +70,7 @@ export default function Login() {
   return (
     <div style={{
       minHeight: "100vh",
+      width: "100%",
       background: "radial-gradient(120% 70% at 18% -5%, rgba(21,48,39,0) 0%, #070D0B 60%), radial-gradient(90% 60% at 92% 8%, #11231D 0%, #070D0B 55%), #070D0B",
       fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
       display: "grid",
