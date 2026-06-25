@@ -211,7 +211,11 @@ async def register(
     db.commit()
     background_tasks.add_task(send_verification_email, new_user.email, raw)
 
-    return {"message": "Account created. Check your email to verify your address."}
+    verify_url = f"{settings.FRONTEND_URL}/verify-email?token={raw}"
+    response = {"message": "Account created. Please verify your email to continue."}
+    if not settings.MAIL_USERNAME:
+        response["verify_url"] = verify_url
+    return response
 
 
 @app.post("/login")
@@ -262,7 +266,10 @@ async def forgot_password(
     db.add(reset_token)
     db.commit()
 
+    reset_url = f"{settings.FRONTEND_URL}/reset-password?token={raw}"
     background_tasks.add_task(send_reset_email, user.email, raw)
+    if not settings.MAIL_USERNAME:
+        return {"message": "Reset link generated (email not configured — use the link below).", "reset_url": reset_url}
     return SAFE_RESPONSE
 
 

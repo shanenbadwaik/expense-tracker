@@ -20,6 +20,7 @@ const inputStyle = {
 export default function ForgotPassword() {
   const [email, setEmail]     = useState("");
   const [step, setStep]       = useState("form"); // "form" | "sent"
+  const [resetUrl, setResetUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const navigate              = useNavigate();
@@ -29,7 +30,8 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
     try {
-      await axios.post(`${API}/forgot-password`, { email });
+      const res = await axios.post(`${API}/forgot-password`, { email });
+      if (res.data.reset_url) setResetUrl(res.data.reset_url);
       setStep("sent");
     } catch (err) {
       const d = err.response?.data?.detail;
@@ -108,12 +110,17 @@ export default function ForgotPassword() {
                     justifyContent: "center", fontSize: 18,
                   }}>✓</div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#ECF1ED", marginBottom: 2 }}>Reset link sent</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#ECF1ED", marginBottom: 2 }}>Reset link ready</div>
                     <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
-                      The link expires in 15 minutes. Check your spam folder if it doesn't arrive.
+                      {resetUrl ? "Click the button below to reset your password." : "Check your inbox — link expires in 15 minutes."}
                     </div>
                   </div>
                 </div>
+                {resetUrl && (
+                  <a href={resetUrl} style={{ display:"block", textAlign:"center", height:54, lineHeight:"54px", borderRadius:99, background:ACCENT, color:"#0B1310", fontWeight:700, fontSize:16, textDecoration:"none", marginBottom:12 }}>
+                    Reset my password
+                  </a>
+                )}
                 <button
                   onClick={() => navigate("/")}
                   style={{

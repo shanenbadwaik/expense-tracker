@@ -26,6 +26,7 @@ export default function Login() {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [toast, setToast]       = useState(null);
   const [loading, setLoading]   = useState(false);
+  const [verifyUrl, setVerifyUrl] = useState(null);
   const navigate                = useNavigate();
 
   const handleChange = (e) =>
@@ -41,14 +42,18 @@ export default function Login() {
     setLoading(true);
     try {
       if (mode === "register") {
-        await axios.post(`${API}/register`, {
+        const res = await axios.post(`${API}/register`, {
           username: formData.username,
           email:    formData.email,
           password: formData.password,
         });
-        showToast("Account created — please log in.", "success");
-        setMode("login");
-        setFormData({ username: "", email: "", password: "" });
+        if (res.data.verify_url) {
+          setVerifyUrl(res.data.verify_url);
+        } else {
+          showToast("Account created — check your email to verify.", "success");
+          setMode("login");
+          setFormData({ username: "", email: "", password: "" });
+        }
       } else {
         const body = new URLSearchParams();
         body.append("username", formData.email);
@@ -71,6 +76,29 @@ export default function Login() {
   };
 
   const isRegister = mode === "register";
+
+  if (verifyUrl) {
+    return (
+      <div style={{ minHeight:"100vh", width:"100%", background:"#070D0B", display:"grid", placeItems:"center", padding:"40px 20px", boxSizing:"border-box", fontFamily:"'Hanken Grotesk',system-ui,sans-serif" }}>
+        <div style={{ width:"100%", maxWidth:460 }}>
+          <div style={{ borderRadius:28, overflow:"hidden", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.10)" }}>
+            <div style={{ padding:"36px 36px 28px", background:"linear-gradient(165deg,#1f4438,#0e1a15)" }}>
+              <div style={{ fontFamily:"'Instrument Serif',serif", fontSize:36, color:"#fff" }}>Account created.</div>
+              <div style={{ fontSize:15, color:"rgba(255,255,255,0.5)", marginTop:8 }}>Click the link below to verify your email and log in.</div>
+            </div>
+            <div style={{ padding:"28px 36px 36px" }}>
+              <a href={verifyUrl} style={{ display:"block", textAlign:"center", height:54, lineHeight:"54px", borderRadius:99, background:ACCENT, color:"#0B1310", fontWeight:700, fontSize:16, textDecoration:"none" }}>
+                Verify my email & continue
+              </a>
+              <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", marginTop:16, wordBreak:"break-all", lineHeight:1.6 }}>
+                Or copy this link: <span style={{ color:"rgba(255,255,255,0.5)" }}>{verifyUrl}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
