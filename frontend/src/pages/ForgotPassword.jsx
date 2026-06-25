@@ -32,7 +32,8 @@ export default function ForgotPassword() {
       await axios.post(`${API}/forgot-password`, { email });
       setStep("sent");
     } catch (err) {
-      setError(err.response?.data?.detail || "Something went wrong. Please try again.");
+      const d = err.response?.data?.detail;
+      setError(Array.isArray(d) ? d.map((x) => x.msg?.replace(/^Value error,\s*/i, "")).join(" · ") : (d || "Something went wrong. Please try again."));
     } finally {
       setLoading(false);
     }

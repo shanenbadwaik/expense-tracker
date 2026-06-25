@@ -60,7 +60,11 @@ export default function Login() {
         window.location.href = "/dashboard";
       }
     } catch (err) {
-      showToast(err.response?.data?.detail || "Something went wrong");
+      const detail = err.response?.data?.detail;
+      const msg = Array.isArray(detail)
+        ? detail.map((d) => d.msg?.replace(/^Value error,\s*/i, "")).join(" · ")
+        : (typeof detail === "string" ? detail : "Something went wrong");
+      showToast(msg);
     } finally {
       setLoading(false);
     }

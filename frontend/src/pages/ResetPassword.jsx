@@ -53,7 +53,8 @@ export default function ResetPassword() {
       });
       setStep("success");
     } catch (err) {
-      setError(err.response?.data?.detail || "Reset failed. The link may have expired.");
+      const d = err.response?.data?.detail;
+      setError(Array.isArray(d) ? d.map((x) => x.msg?.replace(/^Value error,\s*/i, "")).join(" · ") : (d || "Reset failed. The link may have expired."));
     } finally {
       setLoading(false);
     }
