@@ -1548,9 +1548,9 @@ export default function Dashboard() {
               </>
             )}
 
-            {tab === "activity" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}><ActivityContent /></div>}
-            {tab === "insights" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}><InsightsContent /></div>}
-            {tab === "profile" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}><ProfileContent /></div>}
+            {tab === "activity" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}>{ActivityContent()}</div>}
+            {tab === "insights" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}>{InsightsContent()}</div>}
+            {tab === "profile" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}>{ProfileContent()}</div>}
           </div>
         </div>
 
@@ -1584,10 +1584,10 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-          {tab === "home"     && <HomeContent />}
-          {tab === "activity" && <ActivityContent />}
-          {tab === "insights" && <InsightsContent />}
-          {tab === "profile"  && <ProfileContent />}
+          {tab === "home"     && HomeContent()}
+          {tab === "activity" && ActivityContent()}
+          {tab === "insights" && InsightsContent()}
+          {tab === "profile"  && ProfileContent()}
         </div>
       </div>
 
