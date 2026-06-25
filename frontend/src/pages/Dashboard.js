@@ -607,6 +607,12 @@ export default function Dashboard() {
     fontSize: 15, padding: "0 14px", outline: "none", width: "100%",
     boxSizing: "border-box",
   };
+  const selectSt = {
+    ...inputSt,
+    WebkitAppearance: "none",
+    appearance: "none",
+    cursor: "pointer",
+  };
 
   // ── NAV definition ─────────────────────────────────────────────────────────────
   const NAV = [
@@ -1077,7 +1083,7 @@ export default function Dashboard() {
         />
         <select
           value={selCurrency} onChange={(e) => setSelCurrency(e.target.value)}
-          style={{ ...inputSt, flex: "0 0 100px" }}
+          style={{ ...selectSt, flex: "0 0 100px" }}
         >
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -1139,7 +1145,7 @@ export default function Dashboard() {
         />
         <select
           value={editCurrency} onChange={(e) => setEditCurrency(e.target.value)}
-          style={{ ...inputSt, flex: "0 0 100px" }}
+          style={{ ...selectSt, flex: "0 0 100px" }}
         >
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -1194,7 +1200,7 @@ export default function Dashboard() {
         />
         <select
           value={incomeCur} onChange={(e) => setIncomeCur(e.target.value)}
-          style={{ ...inputSt, flex: "0 0 100px" }}
+          style={{ ...selectSt, flex: "0 0 100px" }}
         >
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -1258,7 +1264,7 @@ export default function Dashboard() {
 
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>Currency</div>
-        <select value={recurCur} onChange={(e) => setRecurCur(e.target.value)} style={inputSt}>
+        <select value={recurCur} onChange={(e) => setRecurCur(e.target.value)} style={selectSt}>
           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
@@ -1339,38 +1345,51 @@ export default function Dashboard() {
         <div style={{
           width: 228, flexShrink: 0,
           borderRight: `1px solid ${T.line}`,
-          padding: "26px 18px",
-          display: "flex", flexDirection: "column", gap: 6,
           background: T.railBg,
-          position: "sticky", top: 0, height: "100vh", overflowY: "auto",
+          position: "sticky", top: 0, height: "100vh",
+          display: "flex", flexDirection: "column",
+          overflow: "hidden",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px 24px" }}>
-            <CairnLogo accent={T.accent} size={20} />
-            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Cairn</span>
-          </div>
-          {NAV.map(({ id, label, icon }) => {
-            const active = tab === id;
-            return (
-              <div key={id} onClick={() => setTab(id)} style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "12px 14px", borderRadius: 14, cursor: "pointer",
-                background: active ? rgba("#8FCBA8", 0.12) : "transparent",
-                color: active ? T.accentText : T.text2,
-                fontSize: 14, fontWeight: active ? 600 : 400,
-                transition: "background .15s ease",
-              }}>
-                {icon(tabColor(id))}
-                {label}
-              </div>
-            );
-          })}
-          <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 11, padding: 10, borderRadius: 14, background: T.raised }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#2a5446,#1f4438)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#D8E6DD", flexShrink: 0 }}>
-              {(profile.username || "A")[0].toUpperCase()}
+          {/* Logo — fixed top */}
+          <div style={{ flexShrink: 0, padding: "26px 18px 12px 18px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px" }}>
+              <CairnLogo accent={T.accent} size={20} />
+              <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Cairn</span>
             </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.username}</div>
-              <div style={{ fontSize: 11, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.email}</div>
+          </div>
+
+          {/* Nav items — scrollable middle section */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "4px 18px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {NAV.map(({ id, label, icon }) => {
+                const active = tab === id;
+                return (
+                  <div key={id} onClick={() => setTab(id)} style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 14px", borderRadius: 14, cursor: "pointer",
+                    background: active ? rgba("#8FCBA8", 0.12) : "transparent",
+                    color: active ? T.accentText : T.text2,
+                    fontSize: 14, fontWeight: active ? 600 : 400,
+                    transition: "background .15s ease",
+                  }}>
+                    {icon(tabColor(id))}
+                    {label}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* User card — pinned to bottom, always visible */}
+          <div style={{ flexShrink: 0, padding: "12px 18px 20px 18px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 11, padding: 10, borderRadius: 14, background: T.raised }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#2a5446,#1f4438)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#D8E6DD", flexShrink: 0 }}>
+                {(profile.username || "A")[0].toUpperCase()}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.username}</div>
+                <div style={{ fontSize: 11, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.email}</div>
+              </div>
             </div>
           </div>
         </div>
