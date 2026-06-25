@@ -1624,7 +1624,7 @@ export default function Dashboard() {
 
       {/* FAB */}
       <div onClick={openModal} style={{
-        position: "fixed", right: 22, bottom: 82, zIndex: 20,
+        position: "fixed", left: "50%", transform: "translateX(-50%)", bottom: 82, zIndex: 20,
         width: 58, height: 58, borderRadius: "50%",
         background: T.accentBg, color: T.accentFg,
         display: "flex", alignItems: "center", justifyContent: "center",
