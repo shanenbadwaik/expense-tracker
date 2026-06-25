@@ -10,5 +10,4 @@ python-jose[cryptography]
 python-multipart
 email-validator
 slowapi
-fastapi-mail==1.4.1
-aiosmtplib>=2.0,<3.0
+resend

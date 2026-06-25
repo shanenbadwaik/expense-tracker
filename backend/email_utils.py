@@ -1,5 +1,7 @@
+import re
 import secrets
 import hashlib
+import asyncio
 from config import settings
 
 
@@ -123,37 +125,24 @@ def verify_email_html(verify_url: str) -> str:
 # ── Sending functions ───────────────────────────────────────────────────────────
 
 async def send_email(to: str, subject: str, html: str) -> None:
-    """Send an email. Falls back to console logging in dev (MAIL_USERNAME not set)."""
-    if not settings.MAIL_USERNAME:
+    """Send an email via Resend. Falls back to console logging when RESEND_API_KEY is not set."""
+    if not settings.RESEND_API_KEY:
         print(f"\n[DEV EMAIL] To: {to}\nSubject: {subject}")
-        # Print the href URL from the HTML for easy copy-paste
-        import re
         urls = re.findall(r'href="(http[^"]+)"', html)
         if urls:
             print(f"Link: {urls[0]}\n")
         return
 
-    from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-
-    conf = ConnectionConfig(
-        MAIL_USERNAME=settings.MAIL_USERNAME,
-        MAIL_PASSWORD=settings.MAIL_PASSWORD,
-        MAIL_FROM=settings.MAIL_FROM or settings.MAIL_USERNAME,
-        MAIL_PORT=settings.MAIL_PORT,
-        MAIL_SERVER=settings.MAIL_SERVER,
-        MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
-        MAIL_STARTTLS=settings.MAIL_PORT != 465,
-        MAIL_SSL_TLS=settings.MAIL_PORT == 465,
-        USE_CREDENTIALS=True,
-        VALIDATE_CERTS=True,
-    )
-    message = MessageSchema(
-        subject=subject,
-        recipients=[to],
-        body=html,
-        subtype=MessageType.html,
-    )
-    await FastMail(conf).send_message(message)
+    import resend
+    resend.api_key = settings.RESEND_API_KEY
+    from_addr = f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>"
+    params = {
+        "from": from_addr,
+        "to": [to],
+        "subject": subject,
+        "html": html,
+    }
+    await asyncio.to_thread(resend.Emails.send, params)
 
 
 async def send_reset_email(to: str, raw_token: str) -> None:

@@ -8,12 +8,9 @@ class Settings(BaseSettings):
     ALLOWED_ORIGIN: str = "http://localhost:3000"
     FRONTEND_URL: str = "http://localhost:3000"
 
-    # SMTP — leave blank to print reset links to the console (dev mode)
-    MAIL_USERNAME: str = ""
-    MAIL_PASSWORD: str = ""
-    MAIL_FROM: str = ""
-    MAIL_SERVER: str = "smtp.gmail.com"
-    MAIL_PORT: int = 587
+    # Resend — leave blank to print emails to the console (dev mode)
+    RESEND_API_KEY: str = ""
+    MAIL_FROM: str = "onboarding@resend.dev"
     MAIL_FROM_NAME: str = "Cairn"
 
     model_config = SettingsConfigDict(
