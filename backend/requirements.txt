@@ -10,4 +10,4 @@ python-jose[cryptography]
 python-multipart
 email-validator
 slowapi
-resend
+sendgrid

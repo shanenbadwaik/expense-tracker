@@ -125,25 +125,25 @@ def verify_email_html(verify_url: str) -> str:
 # ── Sending functions ───────────────────────────────────────────────────────────
 
 async def send_email(to: str, subject: str, html: str) -> None:
-    """Send an email via Resend. Falls back to console logging when RESEND_API_KEY is not set."""
-    if not settings.RESEND_API_KEY:
+    if not settings.SENDGRID_API_KEY:
         print(f"\n[DEV EMAIL] To: {to}\nSubject: {subject}")
         urls = re.findall(r'href="(http[^"]+)"', html)
         if urls:
             print(f"Link: {urls[0]}\n")
         return
 
-    import resend
-    resend.api_key = settings.RESEND_API_KEY
-    from_addr = f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>"
-    params = {
-        "from": from_addr,
-        "to": [to],
-        "subject": subject,
-        "html": html,
-    }
+    import sendgrid
+    from sendgrid.helpers.mail import Mail
+
+    message = Mail(
+        from_email=(settings.MAIL_FROM, settings.MAIL_FROM_NAME),
+        to_emails=to,
+        subject=subject,
+        html_content=html,
+    )
     try:
-        await asyncio.to_thread(resend.Emails.send, params)
+        sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+        await asyncio.to_thread(sg.send, message)
     except Exception as e:
         print(f"[EMAIL FAILED] To: {to} — {e}")
 
