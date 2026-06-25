@@ -299,6 +299,8 @@ export default function Dashboard() {
   const [filterCategory, setFilterCategory] = useState(null);
   const [activityView,   setActivityView]   = useState("expenses"); // "expenses" | "income"
   const handleSearchChange = useCallback((e) => setSearchQuery(e.target.value), []);
+  const [budgetEditCat,  setBudgetEditCat]  = useState(null);
+  const [budgetEditAmt,  setBudgetEditAmt]  = useState("");
 
   const T         = buildTheme(colorMode);
   const isDesktop = windowWidth >= 900;
@@ -836,9 +838,6 @@ export default function Dashboard() {
   );
 
   const InsightsContent = () => {
-    const [budgetEditCat, setBudgetEditCat] = useState(null);
-    const [budgetEditAmt, setBudgetEditAmt] = useState("");
-
     const handleSetBudget = async (cat) => {
       const amt = Number(budgetEditAmt || 0);
       if (!amt) { showToast("Enter an amount", "error"); return; }
