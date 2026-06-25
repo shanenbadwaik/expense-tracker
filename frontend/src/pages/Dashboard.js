@@ -622,9 +622,9 @@ export default function Dashboard() {
         {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
       </select>
       <span style={{
-        position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-        fontSize: 10, color: T.text3, pointerEvents: "none", lineHeight: 1,
-      }}>▾</span>
+        position: "absolute", right: 11, top: "50%", transform: "translateY(-50%)",
+        fontSize: 14, fontWeight: 700, color: T.text2, pointerEvents: "none", lineHeight: 1,
+      }}>⌄</span>
     </div>
   );
 
