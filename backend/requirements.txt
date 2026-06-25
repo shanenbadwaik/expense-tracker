@@ -5,7 +5,8 @@ psycopg2-binary
 pydantic==2.12.5
 pydantic-settings
 python-dotenv
-passlib[bcrypt]
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
 python-jose[cryptography]
 python-multipart
 email-validator
