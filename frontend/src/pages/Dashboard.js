@@ -1466,10 +1466,10 @@ export default function Dashboard() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setIncomeModal(true)} style={{ height: 46, padding: "0 18px", border: `1px solid rgba(143,203,168,0.3)`, borderRadius: 99, background: rgba("#8FCBA8", 0.10), color: "#8FCBA8", fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => setIncomeModal(true)} style={{ height: 46, padding: "0 20px", border: `1px solid rgba(143,203,168,0.3)`, borderRadius: 99, background: rgba("#8FCBA8", 0.10), color: "#8FCBA8", fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                   + Income
                 </button>
-                <button onClick={openModal} style={{ height: 46, padding: "0 22px", border: "none", borderRadius: 99, background: T.accentBg, color: T.accentFg, fontFamily: "inherit", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={openModal} style={{ height: 46, padding: "0 20px", border: "none", borderRadius: 99, background: T.accentBg, color: T.accentFg, fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                   + Expense
                 </button>
               </div>
