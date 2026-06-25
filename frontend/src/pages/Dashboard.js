@@ -1437,6 +1437,7 @@ export default function Dashboard() {
             {tab === "home" && (
               <>
                 {/* Stat row */}
+                <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
                   {/* Net flow hero */}
                   <div style={{ position: "relative", borderRadius: 24, padding: 24, background: T.heroBg, border: `1px solid ${T.border}`, overflow: "hidden" }}>
@@ -1539,12 +1540,13 @@ export default function Dashboard() {
                     )}
                   </div>
                 </div>
+                </div>{/* /maxWidth wrapper */}
               </>
             )}
 
-            {tab === "activity" && <div style={{ maxWidth: 700, margin: "0 auto" }}><ActivityContent /></div>}
-            {tab === "insights" && <div style={{ maxWidth: 620, margin: "0 auto" }}><InsightsContent /></div>}
-            {tab === "profile" && <div style={{ maxWidth: 500, margin: "0 auto" }}><ProfileContent /></div>}
+            {tab === "activity" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}><ActivityContent /></div>}
+            {tab === "insights" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}><InsightsContent /></div>}
+            {tab === "profile" && <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}><ProfileContent /></div>}
           </div>
         </div>
 
