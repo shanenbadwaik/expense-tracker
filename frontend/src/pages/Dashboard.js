@@ -1624,14 +1624,18 @@ export default function Dashboard() {
 
       {/* FAB */}
       <div onClick={openModal} style={{
-        position: "fixed", left: "50%", transform: "translateX(-50%)", bottom: 82, zIndex: 20,
+        position: "fixed", right: 22, bottom: 82, zIndex: 20,
         width: 58, height: 58, borderRadius: "50%",
         background: T.accentBg, color: T.accentFg,
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 32, lineHeight: 1, cursor: "pointer",
+        cursor: "pointer",
         boxShadow: "0 14px 28px -6px rgba(143,203,168,0.45)",
         userSelect: "none",
-      }}>+</div>
+      }}>
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M11 4V18M4 11H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+        </svg>
+      </div>
 
       {/* Bottom tab bar */}
       <div style={{
