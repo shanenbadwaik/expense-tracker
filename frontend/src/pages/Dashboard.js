@@ -1443,7 +1443,6 @@ export default function Dashboard() {
             {tab === "home" && (
               <>
                 {/* Stat row */}
-                <div style={{ maxWidth: 660, margin: "0 auto", width: "100%" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
                   {/* Net flow hero */}
                   <div style={{ position: "relative", borderRadius: 24, padding: 24, background: T.heroBg, border: `1px solid ${T.border}`, overflow: "hidden" }}>
@@ -1546,7 +1545,6 @@ export default function Dashboard() {
                     )}
                   </div>
                 </div>
-                </div>{/* /maxWidth wrapper */}
               </>
             )}
 
