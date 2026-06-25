@@ -46,7 +46,7 @@ export default function Login() {
           email:    formData.email,
           password: formData.password,
         });
-        showToast("Account created — check your email to verify.", "success");
+        showToast("Account created — you can now log in.", "success");
         setMode("login");
         setFormData({ username: "", email: "", password: "" });
       } else {
