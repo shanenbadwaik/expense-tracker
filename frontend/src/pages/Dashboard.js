@@ -612,7 +612,21 @@ export default function Dashboard() {
     WebkitAppearance: "none",
     appearance: "none",
     cursor: "pointer",
+    paddingRight: 32,  /* leave room for the custom arrow */
   };
+
+  /* Wrapper that adds a ‹›-style chevron over any <select> using selectSt */
+  const CurrencySelect = ({ value, onChange, style }) => (
+    <div style={{ position: "relative", ...style }}>
+      <select value={value} onChange={onChange} style={{ ...selectSt, width: "100%", height: "100%" }}>
+        {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+      <span style={{
+        position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+        fontSize: 10, color: T.text3, pointerEvents: "none", lineHeight: 1,
+      }}>▾</span>
+    </div>
+  );
 
   // ── NAV definition ─────────────────────────────────────────────────────────────
   const NAV = [
@@ -1085,12 +1099,10 @@ export default function Dashboard() {
           onChange={(e) => setExpenseDate(e.target.value)}
           style={{ ...inputSt, height: 42, flex: 1 }}
         />
-        <select
+        <CurrencySelect
           value={selCurrency} onChange={(e) => setSelCurrency(e.target.value)}
-          style={{ ...selectSt, height: 42, flex: "0 0 88px" }}
-        >
-          {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+          style={{ flex: "0 0 88px", height: 42 }}
+        />
       </div>
 
       {/* Numpad — compact keys */}
@@ -1147,12 +1159,10 @@ export default function Dashboard() {
           onChange={(e) => setEditDate(e.target.value)}
           style={{ ...inputSt, flex: 1 }}
         />
-        <select
+        <CurrencySelect
           value={editCurrency} onChange={(e) => setEditCurrency(e.target.value)}
-          style={{ ...selectSt, flex: "0 0 100px" }}
-        >
-          {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+          style={{ flex: "0 0 100px", height: 46 }}
+        />
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
@@ -1202,12 +1212,10 @@ export default function Dashboard() {
           onChange={(e) => setIncomeDate(e.target.value)}
           style={{ ...inputSt, flex: 1 }}
         />
-        <select
+        <CurrencySelect
           value={incomeCur} onChange={(e) => setIncomeCur(e.target.value)}
-          style={{ ...selectSt, flex: "0 0 100px" }}
-        >
-          {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+          style={{ flex: "0 0 100px", height: 46 }}
+        />
       </div>
 
       <button onClick={saveIncome} style={{ width: "100%", height: 54, border: "none", borderRadius: 99, background: T.accentBg, color: T.accentFg, fontFamily: "inherit", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
@@ -1268,9 +1276,10 @@ export default function Dashboard() {
 
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>Currency</div>
-        <select value={recurCur} onChange={(e) => setRecurCur(e.target.value)} style={selectSt}>
-          {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <CurrencySelect
+          value={recurCur} onChange={(e) => setRecurCur(e.target.value)}
+          style={{ height: 46 }}
+        />
       </div>
 
       <button onClick={saveRecurring} style={{ width: "100%", height: 54, border: "none", borderRadius: 99, background: T.accentBg, color: T.accentFg, fontFamily: "inherit", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
