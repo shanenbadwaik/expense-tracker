@@ -295,20 +295,6 @@ def reset_password(
     return {"message": "Password reset successfully. You can now log in."}
 
 
-# ── Temporary admin verify (remove after use) ─────────────────────────────────────
-
-@app.post("/admin/force-verify")
-def force_verify(email: str, secret: str, db: Session = Depends(get_db)):
-    if secret != "cairn-setup-2024":
-        raise HTTPException(status_code=403)
-    user = db.query(models.User).filter(models.User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    user.is_verified = True
-    db.commit()
-    return {"message": f"Verified {email}"}
-
-
 # ── Email verification ─────────────────────────────────────────────────────────────
 
 @app.get("/verify-email")
