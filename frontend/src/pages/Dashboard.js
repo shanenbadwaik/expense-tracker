@@ -739,7 +739,13 @@ export default function Dashboard() {
           </div>
 
           {/* Category filters */}
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 16, paddingBottom: 2 }}>
+          <div style={{
+            display: "flex", gap: 8, overflowX: "auto", marginBottom: 16,
+            paddingBottom: 8,        /* space so chips aren't clipped */
+            marginBottom: 8,         /* tighten gap to next row to compensate */
+            scrollbarWidth: "none",  /* Firefox */
+            msOverflowStyle: "none", /* IE/Edge */
+          }}>
             <div onClick={() => setFilterCategory(null)} style={chipStyle("All", filterCategory === null ? "All" : "")}>All</div>
             {Object.keys(CAT_META).map((cat) => (
               <div key={cat} onClick={() => setFilterCategory(filterCategory === cat ? null : cat)} style={chipStyle(cat, filterCategory)}>
