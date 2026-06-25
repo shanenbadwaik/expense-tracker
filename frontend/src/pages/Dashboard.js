@@ -256,8 +256,7 @@ export default function Dashboard() {
   const [incomeCur,    setIncomeCur]    = useState("INR");
 
   // ── Budget modal ───────────────────────────────────────────────────────────────
-  const [budgetModal,  setBudgetModal]  = useState(false);
-  const [budgetCat,    setBudgetCat]    = useState("Food");
+  const [budgetCat,    setBudgetCat]    = useState("Food"); // eslint-disable-line no-unused-vars
   const [budgetAmt,    setBudgetAmt]    = useState("");
 
   // ── Recurring modal ────────────────────────────────────────────────────────────
@@ -329,7 +328,7 @@ export default function Dashboard() {
     fetchBudgets();
     fetchRecurring();
     fetchProfile();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Toast ──────────────────────────────────────────────────────────────────────
   const showToast = (msg, kind = "success") => {
@@ -452,7 +451,7 @@ export default function Dashboard() {
   };
 
   // ── Budgets ────────────────────────────────────────────────────────────────────
-  const saveBudget = async () => {
+  const saveBudget = async () => { // eslint-disable-line no-unused-vars
     const amt = Number(budgetAmt || 0);
     if (!amt) { showToast("Enter a budget amount", "error"); return; }
     try {
@@ -461,7 +460,7 @@ export default function Dashboard() {
         amount: amt,
         month: currMonth(),
       }, headers);
-      setBudgetModal(false); setBudgetAmt("");
+      setBudgetAmt("");
       await fetchBudgets();
       showToast(`Budget set for ${budgetCat}`);
     } catch (e) {
@@ -741,9 +740,9 @@ export default function Dashboard() {
 
           {/* Category filters */}
           <div style={{
-            display: "flex", gap: 8, overflowX: "auto", marginBottom: 16,
-            paddingBottom: 8,        /* space so chips aren't clipped */
-            marginBottom: 8,         /* tighten gap to next row to compensate */
+            display: "flex", gap: 8, overflowX: "auto",
+            paddingBottom: 8,
+            marginBottom: 8,
             scrollbarWidth: "none",  /* Firefox */
             msOverflowStyle: "none", /* IE/Edge */
           }}>
