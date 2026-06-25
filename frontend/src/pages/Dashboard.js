@@ -1107,7 +1107,7 @@ export default function Dashboard() {
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <button onClick={() => setShowModal(false)} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: T.chip, color: T.text2, fontSize: 15, cursor: "pointer", flexShrink: 0 }}>✕</button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>New expense</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>New Expense</span>
         <span style={{ width: 32 }} />
       </div>
 
