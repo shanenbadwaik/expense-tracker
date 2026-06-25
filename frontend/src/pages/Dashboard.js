@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import API from "../api";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
@@ -214,10 +214,11 @@ function SearchBar({ value, onChange, borderColor, bgColor, textColor, iconColor
     <div style={{ position: "relative", marginBottom: 14 }}>
       <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: iconColor, fontSize: 15, pointerEvents: "none" }}>🔍</span>
       <input
-        type="search"
+        type="text"
         autoComplete="off"
         autoCorrect="off"
-        spellCheck="false"
+        autoCapitalize="none"
+        spellCheck={false}
         value={value}
         onChange={onChange}
         placeholder="Search expenses…"
@@ -297,6 +298,7 @@ export default function Dashboard() {
   const [searchQuery,    setSearchQuery]    = useState("");
   const [filterCategory, setFilterCategory] = useState(null);
   const [activityView,   setActivityView]   = useState("expenses"); // "expenses" | "income"
+  const handleSearchChange = useCallback((e) => setSearchQuery(e.target.value), []);
 
   const T         = buildTheme(colorMode);
   const isDesktop = windowWidth >= 900;
@@ -760,7 +762,7 @@ export default function Dashboard() {
           {/* Search */}
           <SearchBar
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             borderColor={T.border}
             bgColor={T.chip}
             textColor={T.text}
