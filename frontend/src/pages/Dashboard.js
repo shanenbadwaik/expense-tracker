@@ -207,6 +207,31 @@ function EmptyState({ T, onAdd, label }) {
   );
 }
 
+// Defined outside Dashboard so React never sees a new component type on re-render,
+// which would unmount the input and dismiss the mobile keyboard.
+function SearchBar({ value, onChange, borderColor, bgColor, textColor, iconColor }) {
+  return (
+    <div style={{ position: "relative", marginBottom: 14 }}>
+      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: iconColor, fontSize: 15, pointerEvents: "none" }}>🔍</span>
+      <input
+        type="search"
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck="false"
+        value={value}
+        onChange={onChange}
+        placeholder="Search expenses…"
+        style={{
+          height: 46, borderRadius: 14, border: `1px solid ${borderColor}`,
+          background: bgColor, color: textColor, fontFamily: "inherit",
+          fontSize: 15, paddingLeft: 40, paddingRight: 14, outline: "none",
+          width: "100%", boxSizing: "border-box",
+        }}
+      />
+    </div>
+  );
+}
+
 // ── Main component ──────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [tab, setTab]   = useState("home");
@@ -280,7 +305,12 @@ export default function Dashboard() {
 
   // ── Window resize ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    const onResize = () => setWindowWidth(window.innerWidth);
+    const onResize = () => {
+      // Only update on actual width changes; height changes from keyboard open/close
+      // on mobile would otherwise re-render Dashboard and steal input focus.
+      const w = window.innerWidth;
+      setWindowWidth((prev) => (prev === w ? prev : w));
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -728,15 +758,14 @@ export default function Dashboard() {
       {activityView === "expenses" && (
         <>
           {/* Search */}
-          <div style={{ position: "relative", marginBottom: 14 }}>
-            <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: T.text3, fontSize: 15 }}>🔍</span>
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search expenses…"
-              style={{ ...inputSt, paddingLeft: 40 }}
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            borderColor={T.border}
+            bgColor={T.chip}
+            textColor={T.text}
+            iconColor={T.text3}
+          />
 
           {/* Category filters */}
           <div style={{
