@@ -42,6 +42,19 @@ function todayStr() {
 function currMonth() {
   return new Date().toISOString().slice(0, 7);
 }
+// Fallback rates: 1 unit of currency = X INR
+const FALLBACK_FX = {
+  USD: 83.5, EUR: 90.2, GBP: 105.8,
+  AED: 22.7, SGD: 61.9, JPY: 0.55,
+  CAD: 61.2, AUD: 54.6,
+};
+
+function toINR(amount, currency, fx) {
+  if (!currency || currency === "INR") return Number(amount);
+  const rate = (fx && fx[currency]) || FALLBACK_FX[currency] || 1;
+  return Number(amount) * rate;
+}
+
 function currSym(c) {
   return CURRENCY_SYMBOLS[c] || c;
 }
@@ -248,6 +261,7 @@ export default function Dashboard() {
   const [budgets,   setBudgets]   = useState([]);
   const [recurring, setRecurring] = useState([]);
   const [profile,   setProfile]   = useState({});
+  const [fxRates,   setFxRates]   = useState(FALLBACK_FX);
 
   // ── UI state ───────────────────────────────────────────────────────────────────
   const [toast,         setToast]         = useState(null);
@@ -352,7 +366,8 @@ export default function Dashboard() {
     try {
       const res = await axios.get(`${API}/profile`, headers);
       setProfile(res.data);
-      if (!res.data.is_verified) setVerifyBanner(true);
+      // Email verification is informational only — no login gate
+      // setVerifyBanner(!res.data.is_verified);
     } catch (e) { console.log(e); }
   };
 
@@ -362,6 +377,17 @@ export default function Dashboard() {
     fetchBudgets();
     fetchRecurring();
     fetchProfile();
+    // Fetch live FX rates (base = INR); fall back to FALLBACK_FX on error
+    fetch("https://api.exchangerate-api.com/v4/latest/INR")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.rates) {
+          const live = {};
+          CURRENCIES.forEach((c) => { if (c !== "INR" && data.rates[c]) live[c] = 1 / data.rates[c]; });
+          setFxRates((prev) => ({ ...prev, ...live }));
+        }
+      })
+      .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -580,24 +606,24 @@ export default function Dashboard() {
   };
 
   // ── Derived values ─────────────────────────────────────────────────────────────
-  const spent      = expenses.reduce((t, e) => t + Number(e.amount), 0);
-  const totalIncome = income.reduce((t, i) => t + Number(i.amount), 0);
+  const spent      = expenses.reduce((t, e) => t + toINR(e.amount, e.currency, fxRates), 0);
+  const totalIncome = income.reduce((t, i) => t + toINR(i.amount, i.currency, fxRates), 0);
   const netFlow    = totalIncome - spent;
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const thisWeek = expenses
     .filter((e) => new Date(e.date) >= sevenDaysAgo)
-    .reduce((t, e) => t + Number(e.amount), 0);
+    .reduce((t, e) => t + toINR(e.amount, e.currency, fxRates), 0);
 
   const thisMonthExpenses = expenses.filter((e) => e.date && e.date.startsWith(currMonth()));
   const catSpentThisMonth = {};
   thisMonthExpenses.forEach((e) => {
-    catSpentThisMonth[e.category] = (catSpentThisMonth[e.category] || 0) + Number(e.amount);
+    catSpentThisMonth[e.category] = (catSpentThisMonth[e.category] || 0) + toINR(e.amount, e.currency, fxRates);
   });
 
   const totals = {};
-  expenses.forEach((e) => { totals[e.category] = (totals[e.category] || 0) + Number(e.amount); });
+  expenses.forEach((e) => { totals[e.category] = (totals[e.category] || 0) + toINR(e.amount, e.currency, fxRates); });
   const byCat = Object.entries(totals)
     .map(([name, val]) => ({
       name, amount: val,

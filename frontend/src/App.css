@@ -37,6 +37,10 @@ body {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
+@keyframes cairnSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 /* ── Inputs ──────────────────────────────────────────────────────────────────── */
 input, textarea { box-sizing: border-box; }

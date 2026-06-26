@@ -220,7 +220,9 @@ export default function Login() {
                 display: "block",
               }}
             >
-              {loading ? "…" : isRegister ? "Create account" : "Log in"}
+              {loading ? (
+                <span style={{ display: "inline-block", width: 20, height: 20, border: "2.5px solid rgba(11,19,16,0.3)", borderTopColor: "#0B1310", borderRadius: "50%", animation: "cairnSpin 0.7s linear infinite", verticalAlign: "middle" }} />
+              ) : isRegister ? "Create account" : "Log in"}
             </button>
 
             <div style={{ textAlign: "center", fontSize: 13, color: "#9DB0A5" }}>
