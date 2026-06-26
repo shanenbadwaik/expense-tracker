@@ -42,12 +42,41 @@ function todayStr() {
 function currMonth() {
   return new Date().toISOString().slice(0, 7);
 }
-// Fallback rates: 1 unit of currency = X INR
+// Fallback rates (INR per 1 unit) — updated 2026-06-26
 const FALLBACK_FX = {
-  USD: 83.5, EUR: 90.2, GBP: 105.8,
-  AED: 22.7, SGD: 61.9, JPY: 0.55,
-  CAD: 61.2, AUD: 54.6,
+  USD: 94.34, EUR: 107.18, GBP: 124.38,
+  AED: 25.71, SGD: 72.99,  JPY: 0.585,
+  CAD: 66.23, AUD: 65.36,
 };
+
+const FX_CACHE_KEY = "cairn_fx_rates";
+const FX_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+function loadCachedFx() {
+  try {
+    const c = JSON.parse(localStorage.getItem(FX_CACHE_KEY));
+    if (c && Date.now() - c.ts < FX_CACHE_TTL) return c.rates;
+  } catch {}
+  return null;
+}
+
+function saveCachedFx(rates) {
+  try {
+    localStorage.setItem(FX_CACHE_KEY, JSON.stringify({ ts: Date.now(), rates }));
+  } catch {}
+}
+
+async function fetchLiveFx() {
+  const res  = await fetch("https://api.exchangerate-api.com/v4/latest/INR");
+  const data = await res.json();
+  if (!data.rates) throw new Error("bad response");
+  const live = {};
+  ["USD","EUR","GBP","AED","SGD","JPY","CAD","AUD"].forEach((c) => {
+    if (data.rates[c]) live[c] = 1 / data.rates[c];
+  });
+  saveCachedFx(live);
+  return live;
+}
 
 function toINR(amount, currency, fx) {
   if (!currency || currency === "INR") return Number(amount);
@@ -377,17 +406,20 @@ export default function Dashboard() {
     fetchBudgets();
     fetchRecurring();
     fetchProfile();
-    // Fetch live FX rates (base = INR); fall back to FALLBACK_FX on error
-    fetch("https://api.exchangerate-api.com/v4/latest/INR")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.rates) {
-          const live = {};
-          CURRENCIES.forEach((c) => { if (c !== "INR" && data.rates[c]) live[c] = 1 / data.rates[c]; });
-          setFxRates((prev) => ({ ...prev, ...live }));
-        }
-      })
-      .catch(() => {});
+
+    const applyFx = (rates) => setFxRates((prev) => ({ ...prev, ...rates }));
+
+    // Use cached rates instantly, then refresh from API if stale
+    const cached = loadCachedFx();
+    if (cached) applyFx(cached);
+    fetchLiveFx().then(applyFx).catch(() => {});
+
+    // Auto-refresh every hour so rates stay current during long sessions
+    const interval = setInterval(() => {
+      fetchLiveFx().then(applyFx).catch(() => {});
+    }, FX_CACHE_TTL);
+
+    return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Toast ──────────────────────────────────────────────────────────────────────
