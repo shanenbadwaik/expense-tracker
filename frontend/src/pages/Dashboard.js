@@ -756,25 +756,36 @@ export default function Dashboard() {
         }}>
           {netFlow >= 0 ? "+" : "−"}₹{fmt(Math.abs(netFlow))}
         </div>
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 11, color: T.text2, marginBottom: 2 }}>Income</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#8FCBA8", fontVariantNumeric: "tabular-nums" }}>+₹{fmt(totalIncome)}</div>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", gap: 20 }}>
+            <div>
+              <div style={{ fontSize: 11, color: T.text2, marginBottom: 2 }}>Income</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#8FCBA8", fontVariantNumeric: "tabular-nums" }}>+₹{fmt(totalIncome)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: T.text2, marginBottom: 2 }}>Expenses</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontVariantNumeric: "tabular-nums" }}>−₹{fmt(spent)}</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: 11, color: T.text2, marginBottom: 2 }}>Expenses</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontVariantNumeric: "tabular-nums" }}>−₹{fmt(spent)}</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => setIncomeModal(true)}
+              style={{
+                height: 34, padding: "0 14px", border: `1px solid rgba(143,203,168,0.3)`,
+                borderRadius: 99, background: rgba("#8FCBA8", 0.12), color: "#8FCBA8",
+                fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}
+            >+ Income</button>
+            <button
+              onClick={openModal}
+              style={{
+                height: 34, padding: "0 14px", border: "none",
+                borderRadius: 99, background: T.accentBg, color: T.accentFg,
+                fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}
+            >+ Expense</button>
           </div>
         </div>
-        <button
-          onClick={() => setIncomeModal(true)}
-          style={{
-            position: "absolute", right: 20, bottom: 20,
-            height: 34, padding: "0 14px", border: `1px solid rgba(143,203,168,0.3)`,
-            borderRadius: 99, background: rgba("#8FCBA8", 0.12), color: "#8FCBA8",
-            fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer",
-          }}
-        >+ Add income</button>
       </div>
 
       {/* This week */}
@@ -1684,20 +1695,22 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* FAB */}
-      <div onClick={openModal} style={{
-        position: "fixed", right: 22, bottom: 82, zIndex: 20,
-        width: 58, height: 58, borderRadius: "50%",
-        background: T.accentBg, color: T.accentFg,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        cursor: "pointer",
-        boxShadow: "0 14px 28px -6px rgba(143,203,168,0.45)",
-        userSelect: "none",
-      }}>
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M11 4V18M4 11H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-        </svg>
-      </div>
+      {/* FAB — desktop only; mobile uses card buttons */}
+      {isDesktop && (
+        <div onClick={openModal} style={{
+          position: "fixed", right: 22, bottom: 82, zIndex: 20,
+          width: 58, height: 58, borderRadius: "50%",
+          background: T.accentBg, color: T.accentFg,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 14px 28px -6px rgba(143,203,168,0.45)",
+          userSelect: "none",
+        }}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M11 4V18M4 11H18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
+        </div>
+      )}
 
       {/* Bottom tab bar */}
       <div style={{
