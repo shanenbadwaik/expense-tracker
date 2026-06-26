@@ -191,8 +191,33 @@ export default function Login() {
                 value={formData.password} onChange={handleChange}
                 required style={inputStyle}
               />
-              {isRegister && (
-                <div style={{ fontSize: 11, color: "#6B7D73", marginTop: 6 }}>At least 8 characters, one uppercase letter and one number.</div>
+              {isRegister && formData.password.length > 0 && (() => {
+                const checks = [
+                  { label: "At least 8 characters", ok: formData.password.length >= 8 },
+                  { label: "One uppercase letter",  ok: /[A-Z]/.test(formData.password) },
+                  { label: "One number",            ok: /[0-9]/.test(formData.password) },
+                ];
+                return (
+                  <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                    {checks.map(({ label, ok }) => (
+                      <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{
+                          width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 11, fontWeight: 700,
+                          background: ok ? "rgba(143,203,168,0.18)" : "rgba(255,255,255,0.06)",
+                          color: ok ? "#8FCBA8" : "#6B7D73",
+                          border: `1px solid ${ok ? "rgba(143,203,168,0.4)" : "rgba(255,255,255,0.1)"}`,
+                          transition: "all 0.2s",
+                        }}>{ok ? "✓" : ""}</span>
+                        <span style={{ fontSize: 12, color: ok ? "#8FCBA8" : "#6B7D73", transition: "color 0.2s" }}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+              {isRegister && formData.password.length === 0 && (
+                <div style={{ fontSize: 11, color: "#6B7D73", marginTop: 6 }}>Min. 8 characters, one uppercase letter and one number.</div>
               )}
               {!isRegister && (
                 <div style={{ textAlign: "right", marginTop: 6 }}>
